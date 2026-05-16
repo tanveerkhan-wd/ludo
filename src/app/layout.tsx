@@ -1,5 +1,6 @@
 import './globals.css';
 import { Toaster } from 'sonner';
+import AuthProvider from '@/components/AuthProvider';
 
 export default function RootLayout({
   children,
@@ -9,7 +10,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased dark">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Toaster position="top-center" richColors />
       </body>
     </html>

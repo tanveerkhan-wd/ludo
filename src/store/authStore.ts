@@ -8,7 +8,7 @@ interface AuthState {
   user: Partial<IUser> | null;
   isAuthenticated: boolean;
   setAuth: (user: Partial<IUser> | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -17,9 +17,14 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       setAuth: (user) => set({ user, isAuthenticated: !!user }),
-      logout: () => {
+      logout: async () => {
+        try {
+          await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (error) {
+          console.error('Logout error:', error);
+        }
         set({ user: null, isAuthenticated: false });
-        // Also clear the cookie
+        // Fallback for non-httpOnly cookies if any
         document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       },
     }),

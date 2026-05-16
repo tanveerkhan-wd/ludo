@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyToken } from '@/lib/jwt'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value
   const { pathname } = request.nextUrl
 
@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    const decoded = verifyToken(token)
+    const decoded = await verifyToken(token)
     if (!decoded) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (isAuthRoute && token) {
-    const decoded = verifyToken(token)
+    const decoded = await verifyToken(token)
     if (decoded) {
       if (decoded.userType === 'Admin') {
         return NextResponse.redirect(new URL('/admin/dashboard', request.url))

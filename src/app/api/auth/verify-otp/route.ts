@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     user.lastLoginAt = new Date();
     await user.save();
 
-    const token = signToken({ id: user._id, userType: user.userType });
+    const token = await signToken({ id: user._id.toString(), userType: user.userType });
 
     const response = NextResponse.json({ 
       message: 'Logged in successfully',
