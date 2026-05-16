@@ -6,6 +6,7 @@ export interface IUser {
   _id: string;
   phone: string;
   name: string;
+  avatar?: string;
   userType: UserType;
   password?: string;
   referralCode: string;

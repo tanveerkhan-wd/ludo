@@ -10,19 +10,23 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = pathname.startsWith('/login')
   const isDashboardRoute = pathname.startsWith('/dashboard')
   const isAdminRoute = pathname.startsWith('/admin')
+  const isApiAdminRoute = pathname.startsWith('/api/admin')
 
-  if (isDashboardRoute || isAdminRoute) {
+  if (isDashboardRoute || isAdminRoute || isApiAdminRoute) {
     if (!token) {
+      if (isApiAdminRoute) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
     const decoded = await verifyToken(token)
     if (!decoded) {
+      if (isApiAdminRoute) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
     // Role-based access for /admin
-    if (isAdminRoute && decoded.userType !== 'Admin') {
+    if ((isAdminRoute || isApiAdminRoute) && decoded.userType !== 'Admin') {
+      if (isApiAdminRoute) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
@@ -41,5 +45,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/api/admin/:path*', '/login'],
 }

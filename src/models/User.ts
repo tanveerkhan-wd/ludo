@@ -22,6 +22,9 @@ const UserSchema = new Schema<IUserDocument>(
         return `Player${this.phone.slice(-4)}`;
       }
     },
+    avatar: {
+      type: String,
+    },
     userType: {
       type: String,
       enum: ['Player', 'Admin'],
