@@ -3,27 +3,28 @@ export type KYCStatus = 'Pending' | 'Submitted' | 'Verified' | 'Rejected';
 export type UserStatus = 'Active' | 'Inactive' | 'Suspended' | 'Banned';
 
 export interface IUser {
-  _id: string;
+  id: string;
+  _id?: string; // Optional for backward compatibility in some responses
   phone: string;
   name: string;
-  avatar?: string;
-  userType: UserType;
-  password?: string;
+  avatar?: string | null;
+  userType: string;
+  password?: string | null;
   referralCode: string;
-  referredBy?: string;
-  kycStatus: KYCStatus;
+  referredById?: string | null;
+  kycStatus: string;
   walletBalance: number;
   totalEarnings: number;
   totalReferralEarnings: number;
-  status: UserStatus;
+  status: string;
   accountDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt?: Date;
-  lastLoginAt?: Date;
-  deviceInfo?: string;
-  otp?: string;
-  otpExpiry?: Date;
+  deletedAt?: Date | null;
+  lastLoginAt?: Date | null;
+  deviceInfo?: string | null;
+  otp?: string | null;
+  otpExpiry?: Date | null;
 }
 
 export interface AuthResponse {

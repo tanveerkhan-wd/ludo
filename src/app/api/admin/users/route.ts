@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/models/User';
+import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   try {
-    await dbConnect();
-    
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -14,30 +12,31 @@ export async function GET(req: NextRequest) {
     const kycStatus = searchParams.get('kycStatus');
     const status = searchParams.get('status');
     const sortBy = searchParams.get('sortBy') || 'createdAt';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc';
 
-    const query: any = { accountDeleted: false };
+    const where: Prisma.UserWhereInput = { accountDeleted: false };
 
     if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { phone: { $regex: search, $options: 'i' } },
+      where.OR = [
+        { name: { contains: search } },
+        { phone: { contains: search } },
       ];
     }
 
-    if (userType) query.userType = userType;
-    if (kycStatus) query.kycStatus = kycStatus;
-    if (status) query.status = status;
+    if (userType) where.userType = userType;
+    if (kycStatus) where.kycStatus = kycStatus;
+    if (status) where.status = status;
 
     const skip = (page - 1) * limit;
 
     const [users, total] = await Promise.all([
-      User.find(query)
-        .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      User.countDocuments(query),
+      prisma.user.findMany({
+        where,
+        orderBy: { [sortBy]: sortOrder },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where }),
     ]);
 
     return NextResponse.json({

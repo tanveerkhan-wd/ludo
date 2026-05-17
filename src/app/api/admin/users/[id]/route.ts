@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/models/User';
+import prisma from '@/lib/prisma';
 import { z } from 'zod';
 
 const updateSchema = z.object({
@@ -17,10 +16,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await dbConnect();
     const { id } = await params;
     
-    const user = await User.findById(id).lean();
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+    
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -37,7 +38,6 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await dbConnect();
     const { id } = await params;
     const body = await req.json();
     
@@ -46,11 +46,10 @@ export async function PUT(
       return NextResponse.json({ error: result.error.errors[0].message }, { status: 400 });
     }
 
-    const user = await User.findByIdAndUpdate(
-      id,
-      { $set: result.data },
-      { new: true, runValidators: true }
-    );
+    const user = await prisma.user.update({
+      where: { id },
+      data: result.data,
+    });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -68,30 +67,28 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await dbConnect();
     const { id } = await params;
     
     const { searchParams } = new URL(req.url);
     const hardDelete = searchParams.get('hard') === 'true';
 
     if (hardDelete) {
-      const user = await User.findByIdAndDelete(id);
+      const user = await prisma.user.delete({
+        where: { id },
+      });
       if (!user) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
       return NextResponse.json({ message: 'User permanently deleted' });
     } else {
-      const user = await User.findByIdAndUpdate(
-        id,
-        { 
-          $set: { 
-            accountDeleted: true,
-            deletedAt: new Date(),
-            status: 'Inactive'
-          } 
+      const user = await prisma.user.update({
+        where: { id },
+        data: { 
+          accountDeleted: true,
+          deletedAt: new Date(),
+          status: 'Inactive'
         },
-        { new: true }
-      );
+      });
       if (!user) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }

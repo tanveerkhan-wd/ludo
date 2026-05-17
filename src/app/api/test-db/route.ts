@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
+import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
-    await dbConnect();
-    return NextResponse.json({ status: 'Connected to MongoDB' }, { status: 200 });
+    await prisma.$connect();
+    return NextResponse.json({ status: 'Connected to SQLite via Prisma' }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ status: 'Connection Failed', error: error.message }, { status: 500 });
   }

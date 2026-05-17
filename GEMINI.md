@@ -16,7 +16,7 @@ You are an expert **Full-Stack Software Engineer with 10+ years of experience** 
 - **Language:** TypeScript (Strict typing required)
 - **Styling:** Tailwind CSS + shadcn/ui
 - **Real-time:** Socket.io (for gaming & live updates)
-- **Database:** MongoDB + Mongoose (ACID transactions for wallet)
+- **Database:** SQLite + Prisma ORM (Relational data integrity)
 - **State Management:** Zustand (Client-side sync)
 - **Animations:** Framer Motion (Gaming UI/UX)
 - **Icons:** Lucide React
@@ -40,11 +40,11 @@ You are an expert **Full-Stack Software Engineer with 10+ years of experience** 
 
 ## 📂 Project Structure
 ```bash
+prisma/                   # Prisma Schema & Migrations
 src/
 ├── app/                  # Next.js App Router (Pages & API Routes)
 ├── components/           # Atomic & Shared UI Components
-├── lib/                  # Core Utilities (DB, JWT, SMS, Sockets)
-├── models/               # Mongoose Schemas & TypeScript Interfaces
+├── lib/                  # Core Utilities (Prisma Client, JWT, SMS, Sockets)
 ├── socket/               # Server-side Socket.io Event Handlers
 ├── store/                # Zustand State Management
 ├── types/                # Global TypeScript Definitions

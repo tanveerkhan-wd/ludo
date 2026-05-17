@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                    String    @id @default(cuid())
+  phone                 String    @unique
+  name                  String    @default("Player")
+  avatar                String?
+  userType              String    @default("Player") // Player, Admin
+  password              String?
+  referralCode          String    @unique
+  referredById          String?
+  referredBy            User?     @relation("Referral", fields: [referredById], references: [id])
+  referrals             User[]    @relation("Referral")
+  
+  kycStatus             String    @default("Pending") // Pending, Submitted, Verified, Rejected
+  walletBalance         Float     @default(0)
+  totalEarnings         Float     @default(0)
+  totalReferralEarnings Float     @default(0)
+  
+  status                String    @default("Active") // Active, Inactive, Suspended, Banned
+  accountDeleted        Boolean   @default(false)
+  deletedAt             DateTime?
+  lastLoginAt           DateTime?
+  deviceInfo            String?
+  
+  otp                   String?
+  otpExpiry             DateTime?
+  
+  // Relations for Battles
+  createdBattles        Battle[]  @relation("CreatedBattles")
+  joinedBattles         Battle[]  @relation("JoinedBattles")
+  wonBattles            Battle[]  @relation("WonBattles")
+  
+  // Relations for Transactions
+  transactions          Transaction[]
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([phone])
+  @@index([referralCode])
+}
+
+model Battle {
+  id            String    @id @default(cuid())
+  entryAmount   Float
+  prizeAmount   Float
+  
+  creatorId     String
+  creator       User      @relation("CreatedBattles", fields: [creatorId], references: [id])
+  
+  joinedId      String?
+  joined        User?     @relation("JoinedBattles", fields: [joinedId], references: [id])
+  
+  winnerId      String?
+  winner        User?     @relation("WonBattles", fields: [winnerId], references: [id])
+  
+  gameStatus    String    @default("Open") // Open, Joined, Ongoing, Completed, Cancelled
+  roomCode      String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([creatorId])
+  @@index([joinedId])
+  @@index([gameStatus])
+}
+
+model Transaction {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  
+  amount        Float
+  type          String    // Deposit, Withdrawal, Battle_Entry, Battle_Win, Referral_Bonus
+  status        String    @default("Pending") // Pending, Success, Failed
+  
+  transactionId String?   @unique // External/UPI transaction ID
+  description   String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+}

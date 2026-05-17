@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/models/User';
+import prisma from '@/lib/prisma';
 import { z } from 'zod';
 
 const createSchema = z.object({
@@ -11,7 +10,6 @@ const createSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    await dbConnect();
     const body = await req.json();
     
     const result = createSchema.safeParse(body);
@@ -19,12 +17,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: result.error.errors[0].message }, { status: 400 });
     }
 
-    const existingUser = await User.findOne({ phone: result.data.phone });
+    const existingUser = await prisma.user.findUnique({ where: { phone: result.data.phone } });
     if (existingUser) {
       return NextResponse.json({ error: 'User with this phone already exists' }, { status: 400 });
     }
 
-    const newUser = await User.create(result.data);
+    const newUser = await prisma.user.create({
+      data: {
+        ...result.data,
+        referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      }
+    });
 
     return NextResponse.json({ message: 'User created successfully', user: newUser }, { status: 201 });
   } catch (error: any) {

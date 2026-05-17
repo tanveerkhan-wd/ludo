@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/models/User';
+import prisma from '@/lib/prisma';
 import { signToken } from '@/lib/jwt';
 import { z } from 'zod';
 
@@ -11,7 +10,6 @@ const verifySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    await dbConnect();
     const body = await req.json();
     const result = verifySchema.safeParse(body);
 
@@ -21,28 +19,35 @@ export async function POST(req: NextRequest) {
 
     const { phone, otp } = result.data;
 
-    const user = await User.findOne({ 
-      phone, 
-      otp, 
-      otpExpiry: { $gt: new Date() } 
-    }).select('+otp +otpExpiry');
+    const user = await prisma.user.findFirst({
+      where: {
+        phone,
+        otp,
+        otpExpiry: { gt: new Date() },
+      },
+    });
 
     if (!user) {
       return NextResponse.json({ error: 'Invalid or expired OTP' }, { status: 400 });
     }
 
     // Clear OTP after successful verification
-    user.otp = undefined;
-    user.otpExpiry = undefined;
-    user.lastLoginAt = new Date();
-    await user.save();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        otp: null,
+        otpExpiry: null,
+        lastLoginAt: new Date(),
+      },
+    });
 
-    const token = await signToken({ id: user._id.toString(), userType: user.userType });
+    const token = await signToken({ id: user.id, userType: user.userType });
 
     const response = NextResponse.json({ 
       message: 'Logged in successfully',
       user: {
-        _id: user._id,
+        _id: user.id, // Keeping _id for frontend compatibility
+        id: user.id,
         phone: user.phone,
         name: user.name,
         userType: user.userType,

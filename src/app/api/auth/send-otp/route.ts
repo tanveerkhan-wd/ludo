@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/models/User';
+import prisma from '@/lib/prisma';
 import { sendOTP } from '@/lib/sms';
 import { z } from 'zod';
 
@@ -10,7 +9,6 @@ const phoneSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    await dbConnect();
     const body = await req.json();
     const result = phoneSchema.safeParse(body);
 
@@ -19,21 +17,23 @@ export async function POST(req: NextRequest) {
     }
 
     const { phone } = result.data;
-    
-    let user = await User.findOne({ phone });
-    if (!user) {
-      user = new User({ 
-        phone,
-        userType: phone === '9999999999' ? 'Admin' : 'Player'
-      });
-    }
-
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
     
-    user.otp = otp;
-    user.otpExpiry = otpExpiry;
-    await user.save();
+    await prisma.user.upsert({
+      where: { phone },
+      update: {
+        otp,
+        otpExpiry,
+      },
+      create: {
+        phone,
+        userType: phone === '9999999999' ? 'Admin' : 'Player',
+        otp,
+        otpExpiry,
+        referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      },
+    });
 
     // Send real OTP via Twilio utility
     const smsResult = await sendOTP(phone, otp);
