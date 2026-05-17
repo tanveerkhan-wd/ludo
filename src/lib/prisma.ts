@@ -1,20 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
-import { createClient } from '@libsql/client';
 import path from 'path';
 
 const createPrismaClient = () => {
-  // Use absolute path for Windows to ensure LibSQL can find the file
   const dbPath = path.resolve(process.cwd(), 'dev.db');
-  const connectionString = `file:${dbPath}`;
+  const connectionString = process.platform === 'win32'
+    ? `file:///${dbPath.replace(/\\/g, '/')}`
+    : `file://${dbPath}`;
   
   console.log("Initializing Prisma with Database Path:", connectionString);
   
-  const client = createClient({
-    url: connectionString,
-  });
-  
-  const adapter = new PrismaLibSql(client);
+  const adapter = new PrismaLibSql({ url: connectionString });
 
   return new PrismaClient({
     adapter,
