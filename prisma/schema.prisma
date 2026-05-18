@@ -69,6 +69,8 @@ model User {
   
   // Relations for Transactions
   walletTransactions    WalletTransaction[]
+  referralEarnings      ReferralEarning[] @relation("Referrer")
+  refereeEarnings       ReferralEarning[] @relation("Referee")
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -108,6 +110,7 @@ model Battle {
   updatedAt          DateTime     @updatedAt
 
   walletTransactions WalletTransaction[]
+  referralEarnings   ReferralEarning[]
 }
 
 model WalletTransaction {
@@ -121,4 +124,29 @@ model WalletTransaction {
   status        String          @default("SUCCESS")
   description   String?
   createdAt     DateTime        @default(now())
+}
+
+model ReferralEarning {
+  id            String    @id @default(cuid())
+  referrerId    String
+  referrer      User      @relation("Referrer", fields: [referrerId], references: [id])
+  refereeId     String
+  referee       User      @relation("Referee", fields: [refereeId], references: [id])
+  battleId      String
+  battle        Battle    @relation(fields: [battleId], references: [id])
+  amount        Decimal
+  percentage    Decimal
+  createdAt     DateTime  @default(now())
+
+  @@index([referrerId])
+  @@index([refereeId])
+}
+
+model SystemSettings {
+  id                String   @id @default("global")
+  referralEnabled   Boolean  @default(true)
+  referralPercent   Decimal  @default(3.0)
+  minEntryFee       Decimal  @default(0.0)
+  platformFeePercent Decimal @default(10.0)
+  updatedAt         DateTime @updatedAt
 }

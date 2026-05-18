@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 const phoneSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, 'Invalid phone number'),
+  referralCode: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -16,24 +17,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: result.error.errors[0].message }, { status: 400 });
     }
 
-    const { phone } = result.data;
+    const { phone, referralCode } = result.data;
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
     
-    await prisma.user.upsert({
-      where: { phone },
-      update: {
-        otp,
-        otpExpiry,
-      },
-      create: {
-        phone,
-        userType: phone === '9999999999' ? 'Admin' : 'Player',
-        otp,
-        otpExpiry,
-        referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-      },
-    });
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({ where: { phone } });
+    
+    if (existingUser) {
+      await prisma.user.update({
+        where: { id: existingUser.id },
+        data: { otp, otpExpiry },
+      });
+    } else {
+      // Logic for new user with referral
+      let referredById = null;
+      if (referralCode) {
+        const referrer = await prisma.user.findUnique({ 
+          where: { referralCode: referralCode.toUpperCase() } 
+        });
+        if (referrer) {
+          referredById = referrer.id;
+        }
+      }
+
+      await prisma.user.create({
+        data: {
+          phone,
+          userType: phone === '9999999999' ? 'Admin' : 'Player',
+          otp,
+          otpExpiry,
+          referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+          referredById,
+        },
+      });
+    }
 
     const sendViaTwilio = process.env.SEND_OTP_VIA_TWILIO !== 'false';
 

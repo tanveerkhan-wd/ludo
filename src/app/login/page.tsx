@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [phone, setPhone] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [showReferral, setShowReferral] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -23,7 +25,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone, referralCode }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -68,20 +70,48 @@ export default function LoginPage() {
             <p className="text-gray-400 text-sm">Enter your phone number to continue</p>
           </div>
 
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
-              <span className="text-sm font-bold border-r border-white/10 pr-3 mr-1">+91</span>
+          <div className="space-y-4">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                <span className="text-sm font-bold border-r border-white/10 pr-3 mr-1">+91</span>
+              </div>
+              <input
+                type="tel"
+                maxLength={10}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder="00000 00000"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-16 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-lg tracking-widest font-mono"
+                disabled={loading}
+                autoFocus
+              />
             </div>
-            <input
-              type="tel"
-              maxLength={10}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-              placeholder="00000 00000"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-16 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-lg tracking-widest font-mono"
-              disabled={loading}
-              autoFocus
-            />
+
+            {!showReferral ? (
+              <button 
+                type="button"
+                onClick={() => setShowReferral(true)}
+                className="text-xs text-purple-400 font-semibold uppercase tracking-widest hover:text-purple-300 transition-colors"
+              >
+                Have a referral code?
+              </button>
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative"
+              >
+                <input
+                  type="text"
+                  maxLength={10}
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  placeholder="REFERRAL CODE (OPTIONAL)"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-sm tracking-widest font-bold uppercase"
+                  disabled={loading}
+                />
+              </motion.div>
+            )}
           </div>
 
           <button

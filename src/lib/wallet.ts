@@ -1,5 +1,6 @@
-import { PrismaClient, TransactionType } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+import { PrismaClient, TransactionType, Prisma } from '@prisma/client';
+
+type Decimal = Prisma.Decimal;
 
 const prisma = new PrismaClient();
 
