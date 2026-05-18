@@ -10,6 +10,7 @@ import {
   CardDescription, 
   CardHeader, 
   CardTitle, 
+  CardFooter,
   Tabs, 
   TabsContent, 
   TabsList, 
