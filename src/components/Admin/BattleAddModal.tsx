@@ -56,13 +56,13 @@ export default function BattleAddModal({ isOpen, onClose, onSuccess }: BattleAdd
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+          <div className="w-16 h-16 rounded-[2rem] bg-purple-500/10 flex items-center justify-center border border-purple-500/20 shadow-xl">
             <Swords className="w-8 h-8 text-purple-500" />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-400">Entry Fee (₹)</label>
+          <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-[0.2em]">Strategic Entry Fee (₹)</label>
           <Input 
             type="number"
             value={formData.entryFee}
@@ -70,20 +70,22 @@ export default function BattleAddModal({ isOpen, onClose, onSuccess }: BattleAdd
             placeholder="e.g. 100"
             required
             min={1}
+            className="h-12"
           />
-          <p className="text-[10px] text-gray-500">
-            Prize will be calculated automatically (80% of total entry).
+          <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest px-1">
+            Yield calculated automatically at 80% of pool.
           </p>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-400">Room Code (Ludo King)</label>
+          <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-[0.2em]">Ludo Protocol Room Code</label>
           <Input 
             value={formData.roomCode}
             onChange={(e) => setFormData({ ...formData, roomCode: e.target.value })}
-            placeholder="Enter 8-digit room code"
+            placeholder="Enter 8-digit protocol"
             maxLength={10}
             required
+            className="h-12"
           />
         </div>
 

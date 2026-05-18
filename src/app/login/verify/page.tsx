@@ -108,7 +108,7 @@ export default function VerifyPage() {
         animate={{ y: 0, opacity: 1 }}
         className="text-center mb-12"
       >
-        <h1 className="text-5xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-purple-600">
+        <h1 className="text-5xl font-bold italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-purple-600">
           BAJIGER LUDO
         </h1>
         <p className="text-gray-400 mt-2 font-medium tracking-widest uppercase text-xs">Play • Win • Earn</p>

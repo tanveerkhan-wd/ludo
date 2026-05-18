@@ -26,7 +26,7 @@ export default function DashboardPage() {
             <div className="bg-white/5 rounded-2xl p-3 inline-block">
               <Wallet className="w-6 h-6 text-yellow-500 mb-1" />
               <p className="text-xs text-gray-400 font-bold uppercase tracking-tighter">Balance</p>
-              <p className="text-xl font-black text-white">₹{user?.walletBalance || 0}</p>
+              <p className="text-xl font-bold text-white">₹{user?.walletBalance || 0}</p>
             </div>
           </div>
         </div>
@@ -54,8 +54,8 @@ export default function DashboardPage() {
           className="bg-[#121212] border border-white/5 rounded-2xl p-4"
         >
           <Trophy className="w-8 h-8 text-yellow-500 mb-2" />
-          <p className="text-gray-400 text-xs font-bold uppercase">Total Wins</p>
-          <p className="text-xl font-black">₹{user?.totalEarnings || 0}</p>
+          <p className="text-gray-400 text-xs font-semibold uppercase">Total Wins</p>
+          <p className="text-xl font-bold">₹{user?.totalEarnings || 0}</p>
         </motion.div>
         <motion.div 
           initial={{ scale: 0.9, opacity: 0 }}
@@ -64,8 +64,8 @@ export default function DashboardPage() {
           className="bg-[#121212] border border-white/5 rounded-2xl p-4"
         >
           <Share2 className="w-8 h-8 text-blue-500 mb-2" />
-          <p className="text-gray-400 text-xs font-bold uppercase">Referral</p>
-          <p className="text-xl font-black">₹{user?.totalReferralEarnings || 0}</p>
+          <p className="text-gray-400 text-xs font-semibold uppercase">Referral</p>
+          <p className="text-xl font-bold">₹{user?.totalReferralEarnings || 0}</p>
         </motion.div>
       </div>
 
@@ -80,7 +80,7 @@ export default function DashboardPage() {
           <div className="relative bg-[#121212] border border-white/10 rounded-3xl p-6 overflow-hidden">
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-2xl font-black italic tracking-tighter">BATTLE NOW</h3>
+                <h3 className="text-2xl font-bold italic tracking-tighter">BATTLE NOW</h3>
                 <p className="text-gray-400 text-sm">Join a table and win real cash!</p>
               </div>
               <div className="bg-gradient-to-r from-red-600 to-purple-600 p-4 rounded-2xl">
@@ -99,13 +99,13 @@ export default function DashboardPage() {
         className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <div className="bg-yellow-500 p-2 rounded-lg text-black font-black">3%</div>
+          <div className="bg-yellow-500 p-2 rounded-lg text-black font-bold">3%</div>
           <div>
             <p className="text-sm font-bold text-yellow-500 uppercase">Refer & Earn</p>
             <p className="text-xs text-gray-400">Lifetime referral commission</p>
           </div>
         </div>
-        <Link href="/dashboard/referral" className="text-white bg-white/5 px-4 py-2 rounded-xl text-xs font-bold border border-white/10">
+        <Link href="/dashboard/referral" className="text-white bg-white/5 px-4 py-2 rounded-xl text-xs font-semibold border border-white/10">
           VIEW
         </Link>
       </motion.div>

@@ -20,7 +20,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col pb-20">
       {/* Header */}
       <header className="h-16 border-b border-white/5 bg-[#121212]/80 backdrop-blur-md sticky top-0 z-40 px-6 flex items-center justify-between">
-        <h1 className="text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500">
+        <h1 className="text-xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500">
           BAJIGER LUDO
         </h1>
         <Link href="/dashboard/support" className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               `}>
                 <item.icon className={`w-6 h-6 ${active ? 'fill-purple-500/10' : ''}`} />
               </div>
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${active ? 'text-purple-500' : 'text-gray-500'}`}>
+              <span className={`text-[10px] font-semibold uppercase tracking-widest ${active ? 'text-purple-500' : 'text-gray-500'}`}>
                 {item.name}
               </span>
               {active && (

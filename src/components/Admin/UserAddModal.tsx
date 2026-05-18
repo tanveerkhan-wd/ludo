@@ -54,34 +54,37 @@ export default function UserAddModal({ isOpen, onClose, onSuccess }: UserAddModa
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-400">Full Name</label>
+          <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-[0.2em]">Full Identity Name</label>
           <Input 
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Enter full name"
+            placeholder="Enter player full name"
             required
+            className="h-12"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-400">Phone Number (10 digits)</label>
+          <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-[0.2em]">Primary Contact (10 Digits)</label>
           <Input 
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '') })}
             placeholder="9876543210"
             maxLength={10}
             required
+            className="h-12"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-400">User Type</label>
+          <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-[0.2em]">System Role Type</label>
           <Select 
             value={formData.userType}
             onChange={(e) => setFormData({ ...formData, userType: e.target.value })}
+            className="h-12"
           >
-            <option value="Player">Player</option>
-            <option value="Admin">Admin</option>
+            <option value="Player">Strategic Player</option>
+            <option value="Admin">System Administrator</option>
           </Select>
         </div>
 

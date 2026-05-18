@@ -49,7 +49,7 @@ export default function ProfilePage() {
               <div>
                 <p className="font-medium text-sm">{item.name}</p>
                 {item.status && (
-                  <p className={`text-[10px] font-bold uppercase ${
+                  <p className={`text-[10px] font-semibold uppercase ${
                     item.status === 'Verified' ? 'text-green-500' : 'text-yellow-500'
                   }`}>{item.status}</p>
                 )}
