@@ -35,14 +35,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send real OTP via Twilio utility
-    const smsResult = await sendOTP(phone, otp);
+    const sendViaTwilio = process.env.SEND_OTP_VIA_TWILIO !== 'false';
 
-    return NextResponse.json({ 
-      message: smsResult.mock ? 'OTP logged (Mock)' : 'OTP sent successfully',
-      // For testing, still return OTP in response if in dev mode
-      otp: process.env.NODE_ENV === 'development' ? otp : undefined 
-    });
+    if (sendViaTwilio) {
+      await sendOTP(phone, otp);
+      return NextResponse.json({ 
+        success: true,
+        message: 'OTP sent successfully'
+      });
+    } else {
+      console.log(`[DEV] OTP for ${phone}: ${otp}`);
+      return NextResponse.json({ 
+        success: true,
+        message: 'Twilio is disabled in development mode',
+        debugOtp: otp
+      });
+    }
   } catch (error: any) {
     console.error('SEND_OTP_ERROR', error);
     return NextResponse.json({ error: 'Failed to send OTP' }, { status: 500 });

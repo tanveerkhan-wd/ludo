@@ -10,6 +10,30 @@ datasource db {
   provider = "sqlite"
 }
 
+enum BattleStatus {
+  OPEN
+  FULL
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
+  ABANDONED
+}
+
+enum BattleResult {
+  PENDING
+  WIN
+  LOSS
+  CANCEL
+  DRAW
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+  REFUND
+}
+
 model User {
   id                    String    @id @default(cuid())
   phone                 String    @unique
@@ -23,9 +47,9 @@ model User {
   referrals             User[]    @relation("Referral")
   
   kycStatus             String    @default("Pending") // Pending, Submitted, Verified, Rejected
-  walletBalance         Float     @default(0)
-  totalEarnings         Float     @default(0)
-  totalReferralEarnings Float     @default(0)
+  walletBalance         Decimal   @default(0)
+  totalEarnings         Decimal   @default(0)
+  totalReferralEarnings Decimal   @default(0)
   
   status                String    @default("Active") // Active, Inactive, Suspended, Banned
   accountDeleted        Boolean   @default(false)
@@ -40,9 +64,11 @@ model User {
   createdBattles        Battle[]  @relation("CreatedBattles")
   joinedBattles         Battle[]  @relation("JoinedBattles")
   wonBattles            Battle[]  @relation("WonBattles")
+  proofSubmitted        Battle[]  @relation("ProofSubmittedBy")
+  decidedBattles        Battle[]  @relation("DecidedBy")
   
   // Relations for Transactions
-  transactions          Transaction[]
+  walletTransactions    WalletTransaction[]
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -52,46 +78,47 @@ model User {
 }
 
 model Battle {
-  id            String    @id @default(cuid())
-  entryAmount   Float
-  prizeAmount   Float
-  
-  creatorId     String
-  creator       User      @relation("CreatedBattles", fields: [creatorId], references: [id])
-  
-  joinedId      String?
-  joined        User?     @relation("JoinedBattles", fields: [joinedId], references: [id])
-  
-  winnerId      String?
-  winner        User?     @relation("WonBattles", fields: [winnerId], references: [id])
-  
-  gameStatus    String    @default("Open") // Open, Joined, Ongoing, Completed, Cancelled
-  roomCode      String?
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                 String       @id @default(cuid())
+  battleId           String       @unique
+  creatorId          String
+  creator            User         @relation("CreatedBattles", fields: [creatorId], references: [id])
+  opponentId         String?
+  opponent           User?        @relation("JoinedBattles", fields: [opponentId], references: [id])
+  entryFee           Decimal
+  prizeAmount        Decimal
+  platformFee        Decimal
+  roomCode           String
+  status             BattleStatus @default(OPEN)
+  result             BattleResult @default(PENDING)
+  winnerId           String?
+  winner             User?        @relation("WonBattles", fields: [winnerId], references: [id])
+  resultPostedById   String?
+  resultSubmittedAt  DateTime?
+  screenshotUrl      String?
+  videoProofUrl      String?
+  proofSubmittedById String?
+  proofSubmittedBy   User?        @relation("ProofSubmittedBy", fields: [proofSubmittedById], references: [id])
+  disputed           Boolean      @default(false)
+  disputeReason      String?
+  adminDecision      String?
+  adminNotes         String?
+  decidedById        String?
+  decidedBy          User?        @relation("DecidedBy", fields: [decidedById], references: [id])
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
-  @@index([creatorId])
-  @@index([joinedId])
-  @@index([gameStatus])
+  walletTransactions WalletTransaction[]
 }
 
-model Transaction {
-  id            String    @id @default(cuid())
+model WalletTransaction {
+  id            String          @id @default(cuid())
   userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  
-  amount        Float
-  type          String    // Deposit, Withdrawal, Battle_Entry, Battle_Win, Referral_Bonus
-  status        String    @default("Pending") // Pending, Success, Failed
-  
-  transactionId String?   @unique // External/UPI transaction ID
+  user          User            @relation(fields: [userId], references: [id])
+  battleId      String?
+  battle        Battle?         @relation(fields: [battleId], references: [id])
+  amount        Decimal
+  type          TransactionType
+  status        String          @default("SUCCESS")
   description   String?
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@index([userId])
-  @@index([status])
-  @@index([type])
+  createdAt     DateTime        @default(now())
 }

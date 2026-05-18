@@ -41,7 +41,7 @@ export default function UserEditModal({ user, isOpen, onClose, onSuccess }: User
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/users/${user._id}`, {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

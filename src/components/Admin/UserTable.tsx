@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner';
 import UserEditModal from './UserEditModal';
 import UserDetailsModal from './UserDetailsModal';
+import { ConfirmModal } from './ConfirmModal';
 
 export default function UserTable() {
   const [users, setUsers] = useState<IUser[]>([]);
@@ -44,6 +45,9 @@ export default function UserTable() {
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<IUser | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -80,19 +84,23 @@ export default function UserTable() {
     fetchUsers();
   };
 
-  const handleDelete = async (userId: string) => {
-    if (!confirm('Are you sure you want to soft delete this user?')) return;
-
+  const handleDelete = async () => {
+    if (!userToDelete) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/users/${userToDelete.id}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('User deleted successfully');
+        setIsDeleteModalOpen(false);
         fetchUsers();
       } else {
         toast.error('Failed to delete user');
       }
     } catch (err) {
       toast.error('Something went wrong');
+    } finally {
+      setDeleting(false);
+      setUserToDelete(null);
     }
   };
 
@@ -220,7 +228,7 @@ export default function UserTable() {
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user._id} className="hover:bg-white/[0.02] transition-colors group">
+                  <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
                     <td className="px-4 md:px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-purple-500/20 to-red-500/20 flex items-center justify-center border border-white/10 group-hover:border-purple-500/50 transition-all shrink-0">
@@ -290,7 +298,10 @@ export default function UserTable() {
                           variant="ghost" 
                           size="icon" 
                           className="w-8 h-8 md:w-10 md:h-10 hover:bg-red-500/10 hover:text-red-500"
-                          onClick={() => handleDelete(user._id)}
+                          onClick={() => {
+                            setUserToDelete(user);
+                            setIsDeleteModalOpen(true);
+                          }}
                         >
                           <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                         </Button>
@@ -344,6 +355,15 @@ export default function UserTable() {
         </div>
       </div>
 
+      <ConfirmModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete User"
+        description={`Are you sure you want to delete ${userToDelete?.name}? This action is irreversible.`}
+        confirmLabel="Delete User"
+        loading={deleting}
+      />
       <UserDetailsModal 
         user={selectedUser}
         isOpen={isViewModalOpen}
