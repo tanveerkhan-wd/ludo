@@ -1,82 +1,58 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Battle } from '@prisma/client';
+import { useState } from 'react';
+import BattleTable from '@/components/Admin/BattleTable';
+import BattleAddModal from '@/components/Admin/BattleAddModal';
+import { Swords, Trophy, AlertTriangle, PlayCircle } from 'lucide-react';
+import { Button } from '@/components/ui';
 
 export default function AdminBattlesPage() {
-  const [battles, setBattles] = useState<Battle[]>([]);
-  const [error, setError] = useState('');
-  const [entryFee, setEntryFee] = useState(100);
-  const [roomCode, setRoomCode] = useState('');
-
-  useEffect(() => {
-    fetch('/api/admin/battles')
-      .then((res) => {
-        if (res.status === 401) {
-          setError('Unauthorized: Please log in as admin.');
-          return [];
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setBattles(data);
-        } else {
-          setBattles([]);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        setBattles([]);
-      });
-  }, []);
-
-  const handleCreateBattle = async () => {
-    const res = await fetch('/api/admin/battles/create', {
-      method: 'POST',
-      body: JSON.stringify({ entryFee, roomCode }),
-    });
-    if (res.ok) {
-      alert('Battle created');
-      window.location.reload();
-    } else {
-      const data = await res.json();
-      alert(`Error: ${data.error || 'Failed to create battle'}`);
-    }
-  };
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Battle Management</h1>
-      
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      <div className="mb-6 p-4 border rounded shadow-sm">
-        <h2 className="text-lg font-semibold mb-2">Create Manual Battle</h2>
-        <input type="number" value={entryFee} onChange={(e) => setEntryFee(Number(e.target.value))} className="border p-2 mr-2" placeholder="Entry Fee" />
-        <input type="text" value={roomCode} onChange={(e) => setRoomCode(e.target.value)} className="border p-2 mr-2" placeholder="Room Code" />
-        <button onClick={handleCreateBattle} className="bg-green-500 text-white px-4 py-2 rounded">Create Battle</button>
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Battle Management</h1>
+          <p className="text-gray-400 mt-1">Monitor active games, resolve disputes and manage entry fees.</p>
+        </div>
+        
+        <Button 
+          className="bg-purple-600 hover:bg-purple-700 text-white gap-2 h-12 px-6"
+          onClick={() => setIsAddModalOpen(true)}
+        >
+          <Swords className="w-5 h-5" />
+          Create Manual Battle
+        </Button>
       </div>
 
-      <table className="w-full border-collapse">
-        <thead>
-          <tr>
-            <th className="border p-2">Battle ID</th>
-            <th className="border p-2">Status</th>
-            <th className="border p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {battles.map((battle) => (
-            <tr key={battle.id}>
-              <td className="border p-2">{battle.battleId}</td>
-              <td className="border p-2">{battle.status}</td>
-              <td className="border p-2">
-                <button className="bg-blue-500 text-white px-2 py-1 rounded">View</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Active Battles', value: '24', icon: PlayCircle, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+          { label: 'Total Played', value: '1,582', icon: Trophy, color: 'text-green-500', bg: 'bg-green-500/10' },
+          { label: 'Open Challenges', value: '8', icon: Swords, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+          { label: 'Disputed Games', value: '3', icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-500/10' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-[#121212] border border-white/5 p-6 rounded-3xl flex items-center gap-4">
+            <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color}`}>
+              <stat.icon className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">{stat.label}</p>
+              <p className="text-2xl font-bold">{stat.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <BattleTable key={refreshKey} />
+
+      <BattleAddModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => setRefreshKey(prev => prev + 1)}
+      />
     </div>
   );
 }

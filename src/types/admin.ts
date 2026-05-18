@@ -1,4 +1,5 @@
 import { IUser, KYCStatus, UserStatus, UserType } from './user';
+import { IBattle, BattleStatus } from './battle';
 
 export interface AdminUserFilters {
   search?: string;
@@ -13,6 +14,27 @@ export interface AdminUserFilters {
 
 export interface AdminUsersResponse {
   users: IUser[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface AdminBattleFilters {
+  search?: string;
+  status?: BattleStatus;
+  minFee?: number;
+  maxFee?: number;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface AdminBattlesResponse {
+  battles: IBattle[];
   pagination: {
     total: number;
     page: number;
