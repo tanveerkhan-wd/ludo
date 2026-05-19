@@ -2,13 +2,112 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// ... (Badge, Button, Input components remain unchanged)
+// Badge Component
+interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info" | "premium";
+  glow?: boolean;
+}
+
+export function Badge({ className, variant = "default", glow = false, children, ...props }: BadgeProps) {
+  const variantClasses = {
+    default: "bg-primary/10 text-primary border-primary/20",
+    secondary: "bg-white/10 text-gray-300 border-white/10",
+    destructive: "bg-red-500/10 text-red-400 border-red-500/20",
+    outline: "bg-transparent text-gray-400 border-white/20",
+    success: "bg-green-500/10 text-green-400 border-green-500/20",
+    warning: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+    info: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    premium: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  };
+
+  const glowClasses = {
+    default: "",
+    secondary: "",
+    destructive: glow ? "shadow-[0_0_10px_rgba(239,68,68,0.3)]" : "",
+    outline: "",
+    success: glow ? "shadow-[0_0_10px_rgba(34,197,94,0.3)]" : "",
+    warning: glow ? "shadow-[0_0_10px_rgba(234,179,8,0.3)]" : "",
+    info: glow ? "shadow-[0_0_10px_rgba(59,130,246,0.3)]" : "",
+    premium: glow ? "shadow-[0_0_10px_rgba(168,85,247,0.3)]" : "",
+  };
+
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-colors",
+        variantClasses[variant],
+        glowClasses[variant],
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Button Component
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "destructive" | "outline" | "ghost" | "premium";
+  size?: "default" | "sm" | "lg" | "icon";
+}
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", size = "default", ...props }, ref) => {
+    const variantClasses = {
+      default: "bg-white text-black hover:bg-white/90 shadow-sm",
+      destructive: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
+      outline: "border border-white/10 bg-transparent text-white hover:bg-white/5",
+      ghost: "bg-transparent text-white hover:bg-white/5",
+      premium: "bg-gradient-to-r from-purple-600 to-red-600 text-white hover:from-purple-500 hover:to-red-500 shadow-lg shadow-purple-600/20",
+    };
+
+    const sizeClasses = {
+      default: "h-10 px-4 py-2 text-sm",
+      sm: "h-8 px-3 text-xs",
+      lg: "h-12 px-8 text-base",
+      icon: "h-10 w-10",
+    };
+
+    return (
+      <button
+        ref={ref}
+        className={cn(
+          "inline-flex items-center justify-center rounded-xl font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 disabled:pointer-events-none disabled:opacity-50 active:scale-95",
+          variantClasses[variant],
+          sizeClasses[size],
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+);
+Button.displayName = "Button";
+
+// Input Component
+export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-10 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-gray-500 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:border-purple-500/50 disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+Input.displayName = "Input";
 
 // Select Component
 export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(
@@ -36,26 +135,30 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
     React.useEffect(() => {
       if (isOpen) {
         updateCoords();
-        window.addEventListener('scroll', updateCoords, true);
-        window.addEventListener('resize', updateCoords);
+        window.addEventListener("scroll", updateCoords, true);
+        window.addEventListener("resize", updateCoords);
       }
       return () => {
-        window.removeEventListener('scroll', updateCoords, true);
-        window.removeEventListener('resize', updateCoords);
+        window.removeEventListener("scroll", updateCoords, true);
+        window.removeEventListener("resize", updateCoords);
       };
     }, [isOpen]);
 
-    // Parse options from children
     const options = React.useMemo(() => {
-      return React.Children.map(children, (child) => {
-        if (React.isValidElement(child) && (child.type === 'option' || (child.props as any).value !== undefined)) {
-          return {
-            value: (child.props as any).value,
-            label: (child.props as any).children,
-          };
-        }
-        return null;
-      })?.filter(Boolean) || [];
+      return (
+        React.Children.map(children, (child) => {
+          if (
+            React.isValidElement(child) &&
+            (child.type === "option" || (child.props as any).value !== undefined)
+          ) {
+            return {
+              value: (child.props as any).value,
+              label: (child.props as any).children,
+            };
+          }
+          return null;
+        })?.filter(Boolean) || []
+      );
     }, [children]);
 
     const currentOption = options.find((opt) => String(opt.value) === String(value));
@@ -63,27 +166,27 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
         if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-          const dropdownList = document.getElementById('select-dropdown-portal');
+          const dropdownList = document.getElementById("select-dropdown-portal");
           if (dropdownList && !dropdownList.contains(event.target as Node)) {
             setIsOpen(false);
           }
         }
       };
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     return (
-      <div 
+      <div
         className={cn(
           "relative w-full min-w-[120px] transition-all",
-          !className?.includes('bg-') && "bg-[#121212]/50",
-          !className?.includes('border') && "border border-white/10",
-          !className?.includes('rounded') && "rounded-xl",
+          !className?.includes("bg-") && "bg-[#121212]/50",
+          !className?.includes("border") && "border border-white/10",
+          !className?.includes("rounded") && "rounded-xl",
           isOpen && "border-purple-500/50 ring-2 ring-purple-500/20",
           disabled && "cursor-not-allowed opacity-50 bg-white/5",
           className
-        )} 
+        )}
         ref={containerRef}
       >
         <button
@@ -96,7 +199,9 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
           )}
         >
           <span className="truncate pr-4 font-semibold tracking-tight">
-            {currentOption ? currentOption.label : placeholder || options[0]?.label || 'Select...'}
+            {currentOption
+              ? currentOption.label
+              : placeholder || options[0]?.label || "Select..."}
           </span>
           <motion.svg
             animate={{ rotate: isOpen ? 180 : 0 }}
@@ -110,68 +215,69 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
           </motion.svg>
         </button>
 
-        {mounted && createPortal(
-          <AnimatePresence>
-            {isOpen && (
-              <motion.div
-                id="select-dropdown-portal"
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 8 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-                style={{ 
-                  position: 'absolute',
-                  top: coords.top,
-                  left: coords.left,
-                  width: coords.width,
-                  zIndex: 9999
-                }}
-                className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a0a0a]/98 backdrop-blur-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)]"
-              >
-                <div className="max-h-80 overflow-y-auto p-2 no-scrollbar">
-                  {options.map((option) => (
-                    <button
-                      key={String(option.value)}
-                      type="button"
-                      onClick={() => {
-                        if (onChange) {
-                          const event = {
-                            target: { value: option.value }
-                          } as React.ChangeEvent<HTMLSelectElement>;
-                          onChange(event);
-                        }
-                        setIsOpen(false);
-                      }}
-                      className={cn(
-                        "group flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm transition-all mb-1 last:mb-0",
-                        String(value) === String(option.value)
-                          ? "bg-purple-600 text-white font-bold shadow-[0_8px_20px_-6px_rgba(147,51,234,0.5)]" 
-                          : "text-gray-400 hover:bg-white/5 hover:text-white"
-                      )}
-                    >
-                      <span className="truncate flex-1 text-left">{option.label}</span>
-                      {String(value) === String(option.value) && (
-                        <motion.svg 
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="w-4 h-4 text-white ml-3 shrink-0" 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor" 
-                          strokeWidth={3}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </motion.svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>,
-          document.body
-        )}
-        
+        {mounted &&
+          createPortal(
+            <AnimatePresence>
+              {isOpen && (
+                <motion.div
+                  id="select-dropdown-portal"
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 8 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                  style={{
+                    position: "absolute",
+                    top: coords.top,
+                    left: coords.left,
+                    width: coords.width,
+                    zIndex: 9999,
+                  }}
+                  className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a0a0a]/98 backdrop-blur-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)]"
+                >
+                  <div className="max-h-80 overflow-y-auto p-2 no-scrollbar">
+                    {options.map((option) => (
+                      <button
+                        key={String(option.value)}
+                        type="button"
+                        onClick={() => {
+                          if (onChange) {
+                            const event = {
+                              target: { value: option.value },
+                            } as React.ChangeEvent<HTMLSelectElement>;
+                            onChange(event);
+                          }
+                          setIsOpen(false);
+                        }}
+                        className={cn(
+                          "group flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm transition-all mb-1 last:mb-0",
+                          String(value) === String(option.value)
+                            ? "bg-purple-600 text-white font-bold shadow-[0_8px_20px_-6px_rgba(147,51,234,0.5)]"
+                            : "text-gray-400 hover:bg-white/5 hover:text-white"
+                        )}
+                      >
+                        <span className="truncate flex-1 text-left">{option.label}</span>
+                        {String(value) === String(option.value) && (
+                          <motion.svg
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-4 h-4 text-white ml-3 shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={3}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </motion.svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>,
+            document.body
+          )}
+
         {/* Hidden native select for form support */}
         <select ref={ref} value={value} onChange={onChange} className="hidden" {...props}>
           {children}
@@ -185,54 +291,79 @@ Select.displayName = "Select";
 // Skeleton Component
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn("animate-pulse rounded-md bg-white/5", className)}
-      {...props}
-    />
+    <div className={cn("animate-pulse rounded-md bg-white/5", className)} {...props} />
   );
 }
 
 // Card Components
-export function Card({ className, children, hover = true }: { className?: string, children: React.ReactNode, hover?: boolean }) {
+export function Card({
+  className,
+  children,
+  hover = true,
+}: {
+  className?: string;
+  children: React.ReactNode;
+  hover?: boolean;
+}) {
   return (
-    <div className={cn(
-      "bg-[#121212]/50 backdrop-blur-md border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl transition-all duration-300",
-      hover && "hover:border-purple-500/20 hover:shadow-purple-500/5 hover:-translate-y-1",
-      className
-    )}>
+    <div
+      className={cn(
+        "bg-[#121212]/50 backdrop-blur-md border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl transition-all duration-300",
+        hover && "hover:border-purple-500/20 hover:shadow-purple-500/5 hover:-translate-y-1",
+        className
+      )}
+    >
       {children}
     </div>
   );
 }
 
-export function CardHeader({ className, children }: { className?: string, children: React.ReactNode }) {
-  return <div className={cn("px-8 py-6 border-b border-white/5 bg-white/[0.01]", className)}>{children}</div>;
+export function CardHeader({ className, children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <div className={cn("px-8 py-6 border-b border-white/5 bg-white/[0.01]", className)}>
+      {children}
+    </div>
+  );
 }
 
-export function CardContent({ className, children }: { className?: string, children: React.ReactNode }) {
+export function CardContent({ className, children }: { className?: string; children: React.ReactNode }) {
   return <div className={cn("p-8", className)}>{children}</div>;
 }
 
-export function CardFooter({ className, children }: { className?: string, children: React.ReactNode }) {
-  return <div className={cn("px-8 py-6 border-t border-white/5 bg-white/[0.01]", className)}>{children}</div>;
+export function CardFooter({ className, children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <div className={cn("px-8 py-6 border-t border-white/5 bg-white/[0.01]", className)}>
+      {children}
+    </div>
+  );
 }
 
-export function CardTitle({ className, children }: { className?: string, children: React.ReactNode }) {
-  return <h3 className={cn("text-xl font-bold tracking-tight text-white", className)}>{children}</h3>;
+export function CardTitle({ className, children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <h3 className={cn("text-xl font-bold tracking-tight text-white", className)}>{children}</h3>
+  );
 }
 
-export function CardDescription({ className, children }: { className?: string, children: React.ReactNode }) {
+export function CardDescription({ className, children }: { className?: string; children: React.ReactNode }) {
   return <p className={cn("text-sm text-gray-400 mt-1", className)}>{children}</p>;
 }
 
 // Separator Component
-export function Separator({ className, orientation = "horizontal" }: { className?: string, orientation?: "horizontal" | "vertical" }) {
+export function Separator({
+  className,
+  orientation = "horizontal",
+}: {
+  className?: string;
+  orientation?: "horizontal" | "vertical";
+}) {
   return (
-    <div className={cn(
-      "shrink-0 bg-white/10",
-      orientation === "horizontal" ? "h-[1px] w-full" : "h-full w-[1px]",
-      className
-    )} />
+    <div
+      className={cn(
+        "shrink-0 bg-white/10",
+        orientation === "horizontal" ? "h-[1px] w-full" : "h-full w-[1px]",
+        className
+      )}
+    />
   );
 }
 
@@ -244,14 +375,14 @@ interface TabsContextType {
 
 const TabsContext = React.createContext<TabsContextType | undefined>(undefined);
 
-export function Tabs({ 
-  defaultValue, 
-  className, 
+export function Tabs({
+  defaultValue,
+  className,
   children,
-  onValueChange 
-}: { 
-  defaultValue: string; 
-  className?: string; 
+  onValueChange,
+}: {
+  defaultValue: string;
+  className?: string;
   children: React.ReactNode;
   onValueChange?: (value: string) => void;
 }) {
@@ -271,13 +402,26 @@ export function Tabs({
 
 export function TabsList({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={cn("inline-flex h-14 items-center justify-start rounded-2xl bg-white/5 p-1.5 text-gray-400 border border-white/5 backdrop-blur-sm", className)}>
+    <div
+      className={cn(
+        "inline-flex h-14 items-center justify-start rounded-2xl bg-white/5 p-1.5 text-gray-400 border border-white/5 backdrop-blur-sm",
+        className
+      )}
+    >
       {children}
     </div>
   );
 }
 
-export function TabsTrigger({ value, children, className }: { value: string; children: React.ReactNode; className?: string }) {
+export function TabsTrigger({
+  value,
+  children,
+  className,
+}: {
+  value: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   const context = React.useContext(TabsContext);
   const isActive = context?.value === value;
 
@@ -286,8 +430,8 @@ export function TabsTrigger({ value, children, className }: { value: string; chi
       onClick={() => context?.onValueChange(value)}
       className={cn(
         "inline-flex items-center justify-center whitespace-nowrap rounded-xl px-6 py-2.5 text-sm font-semibold tracking-tight transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
-        isActive 
-          ? "bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.3)]" 
+        isActive
+          ? "bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.3)]"
           : "hover:bg-white/5 hover:text-white text-gray-400",
         className
       )}
@@ -297,7 +441,15 @@ export function TabsTrigger({ value, children, className }: { value: string; chi
   );
 }
 
-export function TabsContent({ value, children, className }: { value: string; children: React.ReactNode; className?: string }) {
+export function TabsContent({
+  value,
+  children,
+  className,
+}: {
+  value: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   const context = React.useContext(TabsContext);
   if (context?.value !== value) return null;
   return (
@@ -313,38 +465,74 @@ export function TabsContent({ value, children, className }: { value: string; chi
 }
 
 // Avatar Components
-export function Avatar({ className, children }: { className?: string, children: React.ReactNode }) {
-  return (
-    <div className={cn("relative flex h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-white/10 shadow-lg", className)}>
-      {children}
-    </div>
-  );
-}
-
-export function AvatarImage({ src, className }: { src?: string | null, className?: string }) {
-  if (!src) return null;
-  return <img src={src} className={cn("aspect-square h-full w-full object-cover transition-transform hover:scale-110 duration-500", className)} />;
-}
-
-export function AvatarFallback({ children, className }: { children: React.ReactNode, className?: string }) {
-  return (
-    <div className={cn("flex h-full w-full items-center justify-center rounded-2xl bg-white/5 text-sm font-semibold text-purple-400 uppercase", className)}>
-      {children}
-    </div>
-  );
-}
-
-// Modal Component (using Framer Motion)
-export function Modal({ 
-  isOpen, 
-  onClose, 
-  title, 
+export function Avatar({
+  className,
   children,
-  className 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  title?: string; 
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative flex h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-white/10 shadow-lg",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function AvatarImage({
+  src,
+  className,
+}: {
+  src?: string | null;
+  className?: string;
+}) {
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      className={cn(
+        "aspect-square h-full w-full object-cover transition-transform hover:scale-110 duration-500",
+        className
+      )}
+    />
+  );
+}
+
+export function AvatarFallback({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex h-full w-full items-center justify-center rounded-2xl bg-white/5 text-sm font-semibold text-purple-400 uppercase",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Modal Component
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  className,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -363,7 +551,7 @@ export function Modal({
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={cn(
               "relative w-full max-w-xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden",
               className
@@ -372,19 +560,27 @@ export function Modal({
             {title && (
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-2xl font-bold tracking-tight text-white">{title}</h3>
-                <button 
+                <button
                   onClick={onClose}
                   className="p-3 hover:bg-white/5 rounded-2xl transition-colors group"
                 >
-                  <svg className="w-6 h-6 text-gray-500 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6 text-gray-500 group-hover:text-white transition-colors"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
             )}
-            <div className="max-h-[70vh] overflow-y-auto no-scrollbar">
-              {children}
-            </div>
+            <div className="max-h-[70vh] overflow-y-auto no-scrollbar">{children}</div>
           </motion.div>
         </div>
       )}
@@ -392,13 +588,22 @@ export function Modal({
   );
 }
 
-// Table Wrapper Component for consistency
-export function TableWrapper({ children, className }: { children: React.ReactNode, className?: string }) {
+// Table Wrapper Component
+export function TableWrapper({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={cn("bg-[#121212]/50 backdrop-blur-md border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl", className)}>
-      <div className="overflow-x-auto no-scrollbar">
-        {children}
-      </div>
+    <div
+      className={cn(
+        "bg-[#121212]/50 backdrop-blur-md border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl",
+        className
+      )}
+    >
+      <div className="overflow-x-auto no-scrollbar">{children}</div>
     </div>
   );
 }
@@ -421,8 +626,8 @@ export function DropdownMenu({ children }: { children: React.ReactNode }) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -434,16 +639,22 @@ export function DropdownMenu({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function DropdownMenuTrigger({ children, asChild }: { children: React.ReactNode, asChild?: boolean }) {
+export function DropdownMenuTrigger({
+  children,
+  asChild,
+}: {
+  children: React.ReactNode;
+  asChild?: boolean;
+}) {
   const context = React.useContext(DropdownContext);
   if (!context) return null;
 
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children as React.ReactElement<any>, {
       onClick: (e: React.MouseEvent) => {
-        children.props.onClick?.(e);
+        (children.props as any).onClick?.(e);
         context.setIsOpen(!context.isOpen);
-      }
+      },
     });
   }
 
@@ -454,7 +665,15 @@ export function DropdownMenuTrigger({ children, asChild }: { children: React.Rea
   );
 }
 
-export function DropdownMenuContent({ children, align = "right", className }: { children: React.ReactNode, align?: "left" | "right", className?: string }) {
+export function DropdownMenuContent({
+  children,
+  align = "right",
+  className,
+}: {
+  children: React.ReactNode;
+  align?: "left" | "right";
+  className?: string;
+}) {
   const context = React.useContext(DropdownContext);
   if (!context) return null;
 
@@ -479,7 +698,17 @@ export function DropdownMenuContent({ children, align = "right", className }: { 
   );
 }
 
-export function DropdownMenuItem({ children, onClick, className, variant = "default" }: { children: React.ReactNode, onClick?: () => void, className?: string, variant?: "default" | "destructive" }) {
+export function DropdownMenuItem({
+  children,
+  onClick,
+  className,
+  variant = "default",
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  variant?: "default" | "destructive";
+}) {
   const context = React.useContext(DropdownContext);
   if (!context) return null;
 
@@ -491,8 +720,8 @@ export function DropdownMenuItem({ children, onClick, className, variant = "defa
       }}
       className={cn(
         "flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all mb-0.5 last:mb-0",
-        variant === "destructive" 
-          ? "text-red-400 hover:bg-red-500/10" 
+        variant === "destructive"
+          ? "text-red-400 hover:bg-red-500/10"
           : "text-gray-400 hover:bg-white/5 hover:text-white",
         className
       )}
