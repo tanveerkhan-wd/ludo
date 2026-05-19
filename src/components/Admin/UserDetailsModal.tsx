@@ -1,23 +1,69 @@
 'use client';
 
 import { IUser } from '@/types/user';
-import { Modal, Badge } from '@/components/ui';
-import { User, Wallet, Share2, Gamepad2, Activity, Shield } from 'lucide-react';
+import { Modal, Badge, Button, Input, Select } from '@/components/ui';
+import { User, Wallet, Share2, Gamepad2, Activity, Shield, PlusCircle, MinusCircle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface UserDetailsModalProps {
   user: IUser | null;
   isOpen: boolean;
   onClose: () => void;
+  onUpdate?: () => void;
 }
 
-export default function UserDetailsModal({ user, isOpen, onClose }: UserDetailsModalProps) {
+export default function UserDetailsModal({ user, isOpen, onClose, onUpdate }: UserDetailsModalProps) {
+  const [adjusting, setAdjusting] = useState(false);
+  const [amount, setAmount] = useState('');
+  const [type, setType] = useState<'ADMIN_CREDIT' | 'ADMIN_DEBIT'>('ADMIN_CREDIT');
+  const [reason, setReason] = useState('');
+
   if (!user) return null;
 
   const stats = [
-    { label: 'Total Earnings', value: `₹${user.totalEarnings.toLocaleString()}`, icon: Wallet, color: 'text-green-500' },
-    { label: 'Referral Earnings', value: `₹${user.totalReferralEarnings.toLocaleString()}`, icon: Share2, color: 'text-purple-500' },
-    { label: 'KYC Status', value: user.kycStatus, icon: Shield, color: 'text-blue-500' },
+    { label: 'Wallet Balance', value: `₹${parseFloat(user.walletBalance as any).toFixed(2)}`, icon: Wallet, color: 'text-green-500' },
+    { label: 'Total Winnings', value: `₹${parseFloat(user.totalWinnings as any).toFixed(2)}`, icon: Trophy, color: 'text-yellow-500' },
+    { label: 'Referral Earnings', value: `₹${parseFloat(user.totalReferralEarnings as any).toFixed(2)}`, icon: Share2, color: 'text-purple-500' },
   ];
+
+  const handleAdjustBalance = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    if (!reason || reason.length < 3) {
+      toast.error('Please provide a valid reason');
+      return;
+    }
+
+    setAdjusting(true);
+    try {
+      const res = await fetch('/api/admin/wallets/adjust', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          amount: parseFloat(amount),
+          type,
+          reason
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(`Wallet ${type === 'ADMIN_CREDIT' ? 'credited' : 'debited'} successfully`);
+        setAmount('');
+        setReason('');
+        if (onUpdate) onUpdate();
+      } else {
+        toast.error(data.error);
+      }
+    } catch (err) {
+      toast.error('Something went wrong');
+    } finally {
+      setAdjusting(false);
+    }
+  };
 
   return (
     <Modal 
@@ -35,7 +81,11 @@ export default function UserDetailsModal({ user, isOpen, onClose }: UserDetailsM
           <div>
             <h2 className="text-2xl font-bold">{user.name}</h2>
             <p className="text-gray-400 font-mono">+91 {user.phone}</p>
-            <Badge className="mt-2">{user.userType}</Badge>
+            <div className="flex gap-2 mt-2">
+              <Badge>{user.userType}</Badge>
+              <Badge variant={user.status === 'Active' ? 'success' : 'destructive'}>{user.status}</Badge>
+              <Badge variant="outline">{user.kycStatus} KYC</Badge>
+            </div>
           </div>
         </div>
 
@@ -45,28 +95,88 @@ export default function UserDetailsModal({ user, isOpen, onClose }: UserDetailsM
             <div key={i} className="bg-white/5 p-4 rounded-2xl border border-white/5">
               <div className="flex items-center gap-2 mb-2 text-gray-400">
                 <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                <span className="text-xs uppercase font-bold">{stat.label}</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest">{stat.label}</span>
               </div>
-              <p className="text-lg font-bold">{stat.value}</p>
+              <p className="text-xl font-bold">{stat.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Sections */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Account Info */}
           <div className="space-y-4">
-            <h3 className="font-bold flex items-center gap-2"><Wallet className="w-4 h-4" /> Wallet Summary</h3>
-            <div className="bg-[#1a1a1a] p-4 rounded-xl space-y-2 text-sm">
-              <div className="flex justify-between"><span>Current Balance</span> <span className="font-bold text-green-500">₹{user.walletBalance.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Status</span> <span className="text-gray-400">{user.status}</span></div>
+            <h3 className="font-bold flex items-center gap-2 text-sm uppercase tracking-widest text-gray-400">
+              <Activity className="w-4 h-4" /> Account Activity
+            </h3>
+            <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Member Since</span> 
+                <span className="font-medium">{new Date(user.createdAt).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Last Login</span> 
+                <span className="font-medium">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Total Deposited</span> 
+                <span className="font-medium text-green-500">₹{parseFloat(user.totalDeposited as any || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Total Withdrawn</span> 
+                <span className="font-medium text-red-500">₹{parseFloat(user.totalWithdrawn as any || 0).toFixed(2)}</span>
+              </div>
             </div>
           </div>
-          
+
+          {/* Wallet Adjustment */}
           <div className="space-y-4">
-            <h3 className="font-bold flex items-center gap-2"><Activity className="w-4 h-4" /> Account Activity</h3>
-            <div className="bg-[#1a1a1a] p-4 rounded-xl space-y-2 text-sm">
-              <div className="flex justify-between"><span>Joined</span> <span className="text-gray-400">{new Date(user.createdAt).toLocaleDateString()}</span></div>
-              <div className="flex justify-between"><span>Last Login</span> <span className="text-gray-400">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'N/A'}</span></div>
+            <h3 className="font-bold flex items-center gap-2 text-sm uppercase tracking-widest text-gray-400">
+              <Wallet className="w-4 h-4" /> Adjust Wallet
+            </h3>
+            <div className="bg-white/[0.02] border border-white/5 p-4 rounded-xl space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase text-gray-500">Amount</label>
+                  <Input 
+                    type="number" 
+                    placeholder="0.00" 
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="h-10 text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase text-gray-500">Action</label>
+                  <Select 
+                    value={type} 
+                    onChange={(e) => setType(e.target.value as any)}
+                    className="h-10 text-sm"
+                  >
+                    <option value="ADMIN_CREDIT">Add (Credit)</option>
+                    <option value="ADMIN_DEBIT">Remove (Debit)</option>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase text-gray-500">Reason / Note</label>
+                <Input 
+                  placeholder="e.g. Refund for battle #123" 
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="h-10 text-sm"
+                />
+              </div>
+              <Button 
+                className="w-full h-10 gap-2 font-bold"
+                variant={type === 'ADMIN_CREDIT' ? 'success' : 'destructive'}
+                onClick={handleAdjustBalance}
+                disabled={adjusting}
+              >
+                {adjusting ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                  type === 'ADMIN_CREDIT' ? <PlusCircle className="w-4 h-4" /> : <MinusCircle className="w-4 h-4" />
+                )}
+                {type === 'ADMIN_CREDIT' ? 'Credit Wallet' : 'Debit Wallet'}
+              </Button>
             </div>
           </div>
         </div>

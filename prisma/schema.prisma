@@ -29,9 +29,20 @@ enum BattleResult {
 }
 
 enum TransactionType {
-  DEBIT
-  CREDIT
+  DEPOSIT
+  WITHDRAWAL
+  BATTLE_JOIN
+  BATTLE_WIN
   REFUND
+  REFERRAL_COMMISSION
+  ADMIN_CREDIT
+  ADMIN_DEBIT
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
 }
 
 enum WithdrawalStatus {
@@ -60,8 +71,12 @@ model User {
   referrals             User[]    @relation("Referral")
   
   kycStatus             String    @default("Pending") // Pending, Submitted, Verified, Rejected
+  
+  // Financial Fields
   walletBalance         Decimal   @default(0)
-  totalEarnings         Decimal   @default(0)
+  totalDeposited        Decimal   @default(0)
+  totalWithdrawn        Decimal   @default(0)
+  totalWinnings         Decimal   @default(0)
   totalReferralEarnings Decimal   @default(0)
   
   status                String    @default("Active") // Active, Inactive, Suspended, Banned
@@ -95,6 +110,9 @@ model User {
   // Relations for Withdrawals
   withdrawals           WithdrawalRequest[] @relation("UserWithdrawals")
   processedWithdrawals  WithdrawalRequest[] @relation("ProcessedWithdrawals")
+
+  // Audit
+  administeredTransactions WalletTransaction[] @relation("AdminTransactions")
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -138,16 +156,32 @@ model Battle {
 }
 
 model WalletTransaction {
-  id            String          @id @default(cuid())
+  id            String            @id @default(cuid())
+  transactionId String            @unique
   userId        String
-  user          User            @relation(fields: [userId], references: [id])
-  battleId      String?
-  battle        Battle?         @relation(fields: [battleId], references: [id])
+  user          User              @relation(fields: [userId], references: [id])
   amount        Decimal
   type          TransactionType
-  status        String          @default("SUCCESS")
-  description   String?
-  createdAt     DateTime        @default(now())
+  status        TransactionStatus @default(SUCCESS)
+  
+  battleId      String?
+  battle        Battle?           @relation(fields: [battleId], references: [id])
+  
+  withdrawalId  String?
+  withdrawal    WithdrawalRequest? @relation(fields: [withdrawalId], references: [id])
+  
+  description   String
+  metadata      String?           // JSON stringified metadata
+  
+  adminId       String?
+  admin         User?             @relation("AdminTransactions", fields: [adminId], references: [id])
+  
+  createdAt     DateTime          @default(now())
+
+  @@index([userId])
+  @@index([transactionId])
+  @@index([type])
+  @@index([status])
 }
 
 model ReferralEarning {
@@ -192,7 +226,8 @@ model WithdrawalRequest {
   processedBy       User?            @relation("ProcessedWithdrawals", fields: [processedById], references: [id])
   rejectionReason   String?
 
+  walletTransactions WalletTransaction[]
+
   @@index([userId])
   @@index([status])
 }
-

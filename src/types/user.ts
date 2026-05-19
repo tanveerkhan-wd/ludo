@@ -13,9 +13,14 @@ export interface IUser {
   referralCode: string;
   referredById?: string | null;
   kycStatus: string;
+  
+  // Financial Fields
   walletBalance: number;
-  totalEarnings: number;
+  totalDeposited: number;
+  totalWithdrawn: number;
+  totalWinnings: number;
   totalReferralEarnings: number;
+  
   status: string;
   accountDeleted: boolean;
   createdAt: Date;

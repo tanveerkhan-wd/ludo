@@ -10,6 +10,8 @@ import { useAuthStore } from '@/store/authStore';
 function VerifyForm() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(40);
+  const [resendLoading, setResendLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const phone = searchParams.get('phone');
@@ -20,6 +22,16 @@ function VerifyForm() {
       router.push('/login');
     }
   }, [phone, router]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +52,7 @@ function VerifyForm() {
         toast.success('Logged in successfully');
         setAuth(data.user);
         if (data.user.userType === 'Admin') {
-          router.push('/admin/dashboard');
+          router.push('/admin');
         } else {
           router.push('/dashboard');
         }
@@ -51,6 +63,30 @@ function VerifyForm() {
       toast.error('Something went wrong');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendLoading || resendTimer > 0) return;
+
+    setResendLoading(true);
+    try {
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('OTP resent successfully');
+        setResendTimer(40);
+      } else {
+        toast.error(data.error || 'Failed to resend OTP');
+      }
+    } catch (err) {
+      toast.error('Something went wrong');
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -96,6 +132,21 @@ function VerifyForm() {
       >
         {loading ? <Loader2 className="animate-spin" /> : 'Verify & Login'}
       </button>
+
+      <div className="text-center pt-2">
+        {resendTimer > 0 ? (
+          <p className="text-gray-500 text-sm">Resend OTP in <span className="text-gray-300 font-mono">{resendTimer}s</span></p>
+        ) : (
+          <button
+            type="button"
+            onClick={handleResendOtp}
+            disabled={resendLoading}
+            className="text-purple-400 hover:text-purple-300 text-sm font-semibold uppercase tracking-wider transition-colors disabled:opacity-50"
+          >
+            {resendLoading ? 'Sending...' : 'Resend OTP'}
+          </button>
+        )}
+      </div>
     </motion.form>
   );
 }
