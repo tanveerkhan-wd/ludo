@@ -55,7 +55,7 @@ export default function DashboardPage() {
         >
           <Trophy className="w-8 h-8 text-yellow-500 mb-2" />
           <p className="text-gray-400 text-xs font-semibold uppercase">Total Wins</p>
-          <p className="text-xl font-bold">₹{user?.totalEarnings || 0}</p>
+          <p className="text-xl font-bold">₹{user?.totalWinnings || 0}</p>
         </motion.div>
         <motion.div 
           initial={{ scale: 0.9, opacity: 0 }}

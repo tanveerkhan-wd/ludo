@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             name: true,
             phone: true,
             walletBalance: true,
-            totalEarnings: true,
+            totalWinnings: true,
             kycStatus: true,
           }
         },

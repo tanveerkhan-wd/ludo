@@ -738,7 +738,7 @@ function PlayerDetailCard({ title, user, accent }: { title: string, user: any, a
             <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mb-2 flex items-center justify-end gap-2">
               <Trophy className="w-3 h-3 text-blue-500" /> Career Yield
             </p>
-            <p className="text-2xl font-bold text-blue-400 tracking-tighter">₹{user.totalEarnings.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-blue-400 tracking-tighter">₹{user.totalWinnings.toLocaleString()}</p>
           </div>
         </div>
 

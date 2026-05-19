@@ -49,7 +49,7 @@ export default async function BattleDetailPage({ params }: BattlePageProps) {
 
     if (formattedBattle.creator) {
       formattedBattle.creator.walletBalance = Number(formattedBattle.creator.walletBalance);
-      formattedBattle.creator.totalEarnings = Number(formattedBattle.creator.totalEarnings);
+      formattedBattle.creator.totalWinnings = Number(formattedBattle.creator.totalWinnings);
       formattedBattle.creator.totalReferralEarnings = Number(formattedBattle.creator.totalReferralEarnings);
       formattedBattle.creator.createdAt = formattedBattle.creator.createdAt.toISOString();
       formattedBattle.creator.updatedAt = formattedBattle.creator.updatedAt.toISOString();
@@ -57,7 +57,7 @@ export default async function BattleDetailPage({ params }: BattlePageProps) {
 
     if (formattedBattle.opponent) {
       formattedBattle.opponent.walletBalance = Number(formattedBattle.opponent.walletBalance);
-      formattedBattle.opponent.totalEarnings = Number(formattedBattle.opponent.totalEarnings);
+      formattedBattle.opponent.totalWinnings = Number(formattedBattle.opponent.totalWinnings);
       formattedBattle.opponent.totalReferralEarnings = Number(formattedBattle.opponent.totalReferralEarnings);
       formattedBattle.opponent.createdAt = formattedBattle.opponent.createdAt.toISOString();
       formattedBattle.opponent.updatedAt = formattedBattle.opponent.updatedAt.toISOString();
