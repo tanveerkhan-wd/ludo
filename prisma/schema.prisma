@@ -34,6 +34,19 @@ enum TransactionType {
   REFUND
 }
 
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSED
+  FAILED
+}
+
+enum WithdrawalMethod {
+  UPI
+  BANK
+}
+
 model User {
   id                    String    @id @default(cuid())
   phone                 String    @unique
@@ -59,6 +72,13 @@ model User {
   
   otp                   String?
   otpExpiry             DateTime?
+
+  // Payment Details
+  upiId                 String?
+  bankAccountNumber     String?
+  bankIfscCode          String?
+  bankAccountHolderName String?
+  preferredWithdrawalMethod WithdrawalMethod @default(UPI)
   
   // Relations for Battles
   createdBattles        Battle[]  @relation("CreatedBattles")
@@ -71,6 +91,10 @@ model User {
   walletTransactions    WalletTransaction[]
   referralEarnings      ReferralEarning[] @relation("Referrer")
   refereeEarnings       ReferralEarning[] @relation("Referee")
+  
+  // Relations for Withdrawals
+  withdrawals           WithdrawalRequest[] @relation("UserWithdrawals")
+  processedWithdrawals  WithdrawalRequest[] @relation("ProcessedWithdrawals")
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -150,3 +174,25 @@ model SystemSettings {
   platformFeePercent Decimal @default(10.0)
   updatedAt         DateTime @updatedAt
 }
+
+model WithdrawalRequest {
+  id                String           @id @default(cuid())
+  withdrawalId      String           @unique
+  userId            String
+  user              User             @relation("UserWithdrawals", fields: [userId], references: [id])
+  amount            Decimal
+  status            WithdrawalStatus @default(PENDING)
+  preferredMethod   WithdrawalMethod
+  upiId             String?
+  bankDetails       String?          // JSON stringified: { accountNumber, ifscCode, accountHolderName }
+  notes             String?
+  requestedAt       DateTime         @default(now())
+  processedAt       DateTime?
+  processedById     String?
+  processedBy       User?            @relation("ProcessedWithdrawals", fields: [processedById], references: [id])
+  rejectionReason   String?
+
+  @@index([userId])
+  @@index([status])
+}
+
