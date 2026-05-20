@@ -13,7 +13,7 @@ const navItems = [
   { name: 'Profile', icon: User, href: '/profile' },
 ];
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+export default function BattlesLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (

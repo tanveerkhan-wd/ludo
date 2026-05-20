@@ -45,12 +45,12 @@ export default function Hero({ isLoggedIn, userName }: HeroProps) {
         >
           {isLoggedIn ? (
             <>
-              <Link href="/dashboard" className="w-full sm:w-auto">
+              <Link href="/battles" className="w-full sm:w-auto">
                 <Button variant="premium" size="lg" className="w-full sm:w-80 h-16 rounded-2xl text-lg gap-3">
                   <Play className="w-6 h-6 fill-current" /> Play Now
                 </Button>
               </Link>
-              <Link href="/dashboard" className="w-full sm:w-auto">
+              <Link href="/battles" className="w-full sm:w-auto">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto h-16 px-8 rounded-2xl text-lg gap-2 border-white/10">
                   <PlusCircle className="w-5 h-5" /> Create Battle
                 </Button>

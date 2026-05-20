@@ -10,10 +10,13 @@ export async function middleware(request: NextRequest) {
   // Protected routes
   const isAuthRoute = pathname.startsWith('/login')
   const isDashboardRoute = pathname.startsWith('/dashboard')
+  const isWalletRoute = pathname.startsWith('/wallet')
+  const isProfileRoute = pathname.startsWith('/profile')
+  const isBattlesRoute = pathname.startsWith('/battles')
   const isAdminRoute = pathname.startsWith('/admin')
   const isApiAdminRoute = pathname.startsWith('/api/admin')
 
-  if (isDashboardRoute || isAdminRoute || isApiAdminRoute) {
+  if (isDashboardRoute || isWalletRoute || isProfileRoute || isBattlesRoute || isAdminRoute || isApiAdminRoute) {
     console.log('MIDDLEWARE: Protected route detected')
     if (!token) {
       console.log('MIDDLEWARE: No token, redirecting to /login')
@@ -54,5 +57,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/api/admin/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/wallet/:path*', '/profile/:path*', '/battles/:path*', '/admin/:path*', '/api/admin/:path*', '/login'],
 }

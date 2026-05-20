@@ -39,7 +39,7 @@ export default function LiveBattles({ isLoggedIn, battles }: LiveBattlesProps) {
               <p className="text-gray-500 text-xs uppercase tracking-widest font-bold mt-1">Join & Win Instantly</p>
             </div>
           </div>
-          <Link href="/dashboard">
+          <Link href="/battles">
             <Button variant="ghost" className="text-purple-400 gap-2 font-bold uppercase tracking-widest text-xs">
               View All <ArrowRight className="w-4 h-4" />
             </Button>

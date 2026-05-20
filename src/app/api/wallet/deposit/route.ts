@@ -85,9 +85,9 @@ export async function POST(req: NextRequest) {
           amount: amount,
           customer_mobile: user.phone,
           remark: `Deposit for ${user.phone}`,
-          success_url: `${appUrl}/dashboard/wallet?status=success&txn=${transaction.transactionId}`,
-          failed_url: `${appUrl}/dashboard/wallet?status=failed&txn=${transaction.transactionId}`,
-          timeout_url: `${appUrl}/dashboard/wallet?status=timeout&txn=${transaction.transactionId}`,
+          success_url: `${appUrl}/wallet?status=success&txn=${transaction.transactionId}`,
+          failed_url: `${appUrl}/wallet?status=failed&txn=${transaction.transactionId}`,
+          timeout_url: `${appUrl}/wallet?status=timeout&txn=${transaction.transactionId}`,
         }, zapKey);
 
         if (zapResponse.status === 'success') {

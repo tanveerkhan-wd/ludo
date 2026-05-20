@@ -32,10 +32,10 @@ export default function DashboardPage() {
         </div>
         
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <Link href="/dashboard/wallet" className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-2xl transition-all shadow-lg shadow-green-600/20">
+          <Link href="/wallet" className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-2xl transition-all shadow-lg shadow-green-600/20">
             <Plus className="w-5 h-5" /> Add Cash
           </Link>
-          <Link href="/dashboard/wallet/withdraw" className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-2xl transition-all border border-white/10">
+          <Link href="/wallet/withdraw" className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-2xl transition-all border border-white/10">
             Withdraw <ArrowUpRight className="w-5 h-5" />
           </Link>
         </div>
@@ -75,7 +75,7 @@ export default function DashboardPage() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        <Link href="/dashboard/battles" className="block relative group">
+        <Link href="/battles" className="block relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-purple-600 rounded-3xl blur opacity-25 group-hover:opacity-50 transition-opacity" />
           <div className="relative bg-[#121212] border border-white/10 rounded-3xl p-6 overflow-hidden">
             <div className="flex justify-between items-center">

@@ -142,11 +142,10 @@ export default function WalletPage() {
           </div>
         </div>
         <div className="flex gap-3">
-          <Link href="/dashboard/wallet/withdraw">
+          <Link href="/wallet/withdraw">
             <Button variant="outline" className="h-12 px-6 rounded-xl border-white/10">Withdraw</Button>
           </Link>
-          <Button variant="premium" className="h-12 px-8 rounded-xl" onClick={() => document.getElementById('deposit-input')?.focus()}>
-            Deposit Cash
+          <Button variant="premium" className="h-12 px-8 rounded-xl" onClick={() => document.getElementById('deposit-input')?.focus()}>            Deposit Cash
           </Button>
         </div>
       </div>

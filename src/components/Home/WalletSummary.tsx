@@ -35,18 +35,17 @@ export default function WalletSummary({ isLoggedIn, balance = 0 }: WalletSummary
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
               {isLoggedIn ? (
                 <>
-                  <Link href="/dashboard/wallet" className="w-full sm:w-auto">
+                  <Link href="/wallet" className="w-full sm:w-auto">
                     <Button variant="premium" className="h-14 px-8 rounded-2xl gap-2 font-bold w-full">
                       <TrendingUp className="w-5 h-5" /> Deposit Cash
                     </Button>
                   </Link>
-                  <Link href="/dashboard/wallet/withdraw" className="w-full sm:w-auto">
+                  <Link href="/wallet/withdraw" className="w-full sm:w-auto">
                     <Button variant="outline" className="h-14 px-8 rounded-2xl font-bold border-white/5 w-full">
                       Withdraw
                     </Button>
                   </Link>
-                </>
-              ) : (
+                </>              ) : (
                 <Link href="/login" className="w-full sm:w-auto">
                   <Button variant="premium" className="h-14 px-12 rounded-2xl font-bold w-full">
                     Login to Wallet

@@ -113,7 +113,7 @@ export default async function HomePage() {
 
           <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-gray-400">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
-            <Link href="/dashboard" className="hover:text-white transition-colors">Battles</Link>
+            <Link href="/battles" className="hover:text-white transition-colors">Battles</Link>
             <Link href="#referral" className="hover:text-white transition-colors">Earn</Link>
             <Link href="#support" className="hover:text-white transition-colors">Support</Link>
           </div>
