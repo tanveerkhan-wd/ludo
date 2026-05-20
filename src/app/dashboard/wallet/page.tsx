@@ -68,12 +68,12 @@ export default function WalletPage() {
         body: JSON.stringify({ amount })
       });
       const data = await res.json();
-      if (res.ok) {
-        toast.success(data.message);
-        setDepositAmount('');
-        fetchWalletData();
+      if (res.ok && data.payment_url) {
+        toast.success('Redirecting to payment gateway...');
+        // Redirect to ZapUPI payment page
+        window.location.href = data.payment_url;
       } else {
-        toast.error(data.error);
+        toast.error(data.error || 'Failed to initiate deposit');
       }
     } catch (err) {
       toast.error('Something went wrong');
@@ -81,6 +81,29 @@ export default function WalletPage() {
       setIsDepositing(false);
     }
   };
+
+  // Handle callback status from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const txn = params.get('txn');
+
+    if (status) {
+      if (status === 'success') {
+        toast.success('Payment initiated successfully! It will reflect in your wallet shortly.', {
+          duration: 5000
+        });
+      } else if (status === 'failed') {
+        toast.error('Payment failed or was cancelled.');
+      } else if (status === 'timeout') {
+        toast.error('Payment session timed out.');
+      }
+      
+      // Clear URL parameters
+      window.history.replaceState({}, '', window.location.pathname);
+      fetchWalletData();
+    }
+  }, []);
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -115,8 +138,7 @@ export default function WalletPage() {
             <Wallet className="w-6 h-6 text-purple-400" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Wallet</h1>
-            <p className="text-gray-400 mt-1">Manage your funds and view transaction history.</p>
+            <h1 className="text-3xl font-bold tracking-tight">Wallet</h1>
           </div>
         </div>
         <div className="flex gap-3">
@@ -129,9 +151,9 @@ export default function WalletPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Main Balance Card */}
-        <Card className="md:col-span-2 bg-gradient-to-br from-purple-900/40 via-purple-600/10 to-transparent border-purple-500/20 overflow-hidden relative">
+        <Card className="bg-gradient-to-br from-purple-900/40 via-purple-600/10 to-transparent border-purple-500/20 overflow-hidden relative">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Wallet className="w-32 h-32 rotate-12" />
           </div>
@@ -144,21 +166,21 @@ export default function WalletPage() {
               </h2>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8 border-t border-white/5">
+            <div className="grid grid-cols-2 gap-6 mt-8 pt-8 border-t border-white/5">
               <div>
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Total Winnings</p>
                 <p className="text-lg font-bold text-green-400">₹{balanceData ? parseFloat(balanceData.totalWinnings).toFixed(2) : '0.00'}</p>
               </div>
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Referral</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Referral Amount</p>
                 <p className="text-lg font-bold text-blue-400">₹{balanceData ? parseFloat(balanceData.totalReferralEarnings).toFixed(2) : '0.00'}</p>
               </div>
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Deposited</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Total Deposited</p>
                 <p className="text-lg font-bold text-white">₹{balanceData ? parseFloat(balanceData.totalDeposited).toFixed(2) : '0.00'}</p>
               </div>
               <div>
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Withdrawn</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Total Withdrawn</p>
                 <p className="text-lg font-bold text-red-400">₹{balanceData ? parseFloat(balanceData.totalWithdrawn).toFixed(2) : '0.00'}</p>
               </div>
             </div>
@@ -210,27 +232,26 @@ export default function WalletPage() {
         </Card>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-gray-400" />
-            <h2 className="text-xl font-bold">Transaction History</h2>
-          </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-            {filters.map(f => (
-              <button
-                key={f.value}
-                onClick={() => setFilter(f.value)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-                  filter === f.value 
-                  ? 'bg-purple-600 text-white' 
-                  : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <History className="w-5 h-5 text-gray-400" />
+          <h2 className="text-xl font-bold">Transaction History</h2>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+          {filters.map(f => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                filter === f.value 
+                ? 'bg-purple-600 text-white' 
+                : 'bg-white/5 text-gray-400 hover:bg-white/10'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
 
         <Card className="bg-[#121212] border-white/5 overflow-hidden">
@@ -260,6 +281,16 @@ export default function WalletPage() {
                           <Badge variant="secondary" className="text-[10px] h-5 px-2 bg-white/5 text-gray-400 border-none">
                             {getTransactionLabel(t.type)}
                           </Badge>
+                          {t.status !== 'SUCCESS' && (
+                            <Badge 
+                              variant={t.status === 'PENDING' ? 'outline' : 'destructive'} 
+                              className={`text-[10px] h-5 px-2 bg-transparent border-white/10 ${
+                                t.status === 'PENDING' ? 'text-yellow-500 border-yellow-500/20' : 'text-red-500 border-red-500/20'
+                              }`}
+                            >
+                              {t.status}
+                            </Badge>
+                          )}
                           <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
                             {new Date(t.createdAt).toLocaleDateString()} • {new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>

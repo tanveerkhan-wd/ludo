@@ -202,10 +202,50 @@ model ReferralEarning {
 
 model SystemSettings {
   id                String   @id @default("global")
+
+  // General
+  platformName      String   @default("Bajiger Ludo")
+  tagline           String   @default("Play. Compete. Earn.")
+  logoUrl           String?
+  contactEmail      String   @default("support@bajigerludo.com")
+  supportWhatsApp   String   @default("+919999999999")
+  maintenanceMode   Boolean  @default(false)
+
+  // Referral Program
   referralEnabled   Boolean  @default(true)
   referralPercent   Decimal  @default(3.0)
   minEntryFee       Decimal  @default(0.0)
-  platformFeePercent Decimal @default(10.0)
+
+  // Wallet & Withdrawal
+  minWithdrawalAmount    Decimal @default(100.0)
+  dailyWithdrawalLimit   Decimal @default(10000.0)
+  withdrawalFeePercent   Decimal @default(0.0)
+  withdrawalFeeFixed     Decimal @default(0.0)
+  autoApprovalLimit      Decimal @default(0.0)
+
+  // Battle & Game Settings
+  platformFeePercent       Decimal @default(10.0)
+  minBattleEntry           Decimal @default(10.0)
+  maxBattleEntry           Decimal @default(10000.0)
+  autoCancelMinutes        Int     @default(15)
+  resultSubmitWindowMinutes Int    @default(30)
+
+  // Payment Gateway
+  razorpayKeyId      String?
+  razorpayKeySecret  String?
+  cashfreeAppId      String?
+  cashfreeSecretKey  String?
+  zapupiKey          String?
+  activePaymentGateway String   @default("NONE") // NONE, RAZORPAY, CASHFREE, ZAPUPI
+  paymentTestMode    Boolean @default(true)
+  webhookUrl         String  @default("http://localhost:3000/api/webhooks/payment")
+
+  // Security
+  otpExpiryMinutes      Int  @default(5)
+  rateLimitPerMinute    Int  @default(10)
+  sessionTimeoutMinutes Int  @default(60)
+  kycRequired           Boolean @default(false)
+
   updatedAt         DateTime @updatedAt
 }
 

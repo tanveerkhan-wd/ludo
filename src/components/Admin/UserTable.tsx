@@ -10,6 +10,7 @@ import {
   Eye, 
   Edit2, 
   Trash2, 
+  RotateCcw,
   ChevronLeft, 
   ChevronRight,
   Download,
@@ -21,7 +22,9 @@ import {
   Clock,
   Wallet,
   Smartphone,
-  Calendar
+  Calendar,
+  Archive,
+  UserCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import UserEditModal from './UserEditModal';
@@ -53,6 +56,8 @@ export default function UserTable() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<IUser | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -66,6 +71,7 @@ export default function UserTable() {
       queryParams.set('limit', pagination.limit.toString());
       queryParams.set('sortBy', filters.sortBy || 'createdAt');
       queryParams.set('sortOrder', filters.sortOrder || 'desc');
+      if (showDeleted) queryParams.set('includeDeleted', 'true');
 
       const res = await fetch(`/api/admin/users?${queryParams.toString()}`);
       const data: AdminUsersResponse = await res.json();
@@ -81,7 +87,7 @@ export default function UserTable() {
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.page, pagination.limit, filters.userType, filters.kycStatus, filters.status]);
+  }, [pagination.page, pagination.limit, filters.userType, filters.kycStatus, filters.status, showDeleted]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +115,23 @@ export default function UserTable() {
     }
   };
 
+  const handleRestore = async (userId: string) => {
+    setRestoringId(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/restore`, { method: 'PATCH' });
+      if (res.ok) {
+        toast.success('User restored successfully');
+        fetchUsers();
+      } else {
+        toast.error('Failed to restore user');
+      }
+    } catch {
+      toast.error('Something went wrong');
+    } finally {
+      setRestoringId(null);
+    }
+  };
+
   const getStatusConfig = (status: UserStatus) => {
     switch (status) {
       case 'Active': return { variant: 'success' as const, icon: CheckCircle2, label: 'Active' };
@@ -130,6 +153,30 @@ export default function UserTable() {
 
   return (
     <div className="space-y-8">
+      {/* View Toggle */}
+      <div className="flex items-center gap-3 bg-white/[0.02] p-1.5 rounded-2xl border border-white/5 w-fit">
+        <button
+          onClick={() => { setShowDeleted(false); setPagination({ ...pagination, page: 1 }); }}
+          className={cn(
+            'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all',
+            !showDeleted ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20' : 'text-gray-500 hover:text-white',
+          )}
+        >
+          <UserCheck className="w-4 h-4" />
+          Active Players
+        </button>
+        <button
+          onClick={() => { setShowDeleted(true); setPagination({ ...pagination, page: 1 }); }}
+          className={cn(
+            'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all',
+            showDeleted ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-gray-500 hover:text-white',
+          )}
+        >
+          <Archive className="w-4 h-4" />
+          Deleted Players
+        </button>
+      </div>
+
       {/* Search and Filters */}
       <div className="bg-[#121212]/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl">
         <div className="px-8 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
@@ -236,13 +283,16 @@ export default function UserTable() {
               <tr>
                 <td colSpan={6} className="px-8 py-24 text-center">
                   <div className="flex flex-col items-center gap-4 opacity-30">
-                    <UserIcon className="w-16 h-16" />
-                    <p className="font-bold uppercase tracking-[0.4em] text-sm text-gray-400">Zero Strategic Players Found</p>
+                    {showDeleted ? <Archive className="w-16 h-16" /> : <UserIcon className="w-16 h-16" />}
+                    <p className="font-bold uppercase tracking-[0.4em] text-sm text-gray-400">
+                      {showDeleted ? 'No Deleted Players Found' : 'Zero Strategic Players Found'}
+                    </p>
                   </div>
                 </td>
               </tr>
             ) : (
               users.map((user) => {
+                const isDeleted = user.accountDeleted;
                 const status = getStatusConfig(user.status);
                 const kyc = getKYCConfig(user.kycStatus);
                 return (
@@ -250,26 +300,38 @@ export default function UserTable() {
                     key={user.id} 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="hover:bg-white/[0.04] transition-all duration-300 group"
+                    className={cn(
+                      'transition-all duration-300 group',
+                      isDeleted ? 'bg-red-500/[0.02] hover:bg-red-500/[0.06] opacity-70' : 'hover:bg-white/[0.04]',
+                    )}
                   >
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-5">
                         <div className="relative group/avatar">
-                          <Avatar className="w-14 h-14 border-2 border-white/10 group-hover:border-purple-500/30 transition-all duration-500 ring-2 ring-purple-500/5 group-hover:ring-purple-500/10">
+                          <Avatar className={cn('w-14 h-14 border-2 ring-2 transition-all duration-500', isDeleted
+                            ? 'border-red-500/20 ring-red-500/5'
+                            : 'border-white/10 group-hover:border-purple-500/30 ring-purple-500/5 group-hover:ring-purple-500/10')}>
                             <AvatarImage src={user.avatar} />
-                            <AvatarFallback className="bg-gradient-to-br from-purple-500/10 to-red-500/10 text-purple-400">
+                            <AvatarFallback className={isDeleted
+                              ? 'bg-red-500/10 text-red-400'
+                              : 'bg-gradient-to-br from-purple-500/10 to-red-500/10 text-purple-400'}>
                               {user.name[0]}
                             </AvatarFallback>
                           </Avatar>
-                          <div className={cn("absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-[#0a0a0a] z-10", user.status === 'Active' ? 'bg-green-500' : 'bg-gray-600')} />
+                          <div className={cn('absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-[#0a0a0a] z-10', isDeleted ? 'bg-red-500' : user.status === 'Active' ? 'bg-green-500' : 'bg-gray-600')} />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-white truncate text-base tracking-tight">{user.name}</p>
+                          <p className={cn('font-bold truncate text-base tracking-tight', isDeleted ? 'text-red-400' : 'text-white')}>{user.name}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <Badge variant={user.userType === 'Admin' ? 'premium' : 'outline'} className="h-4 px-1.5 py-0 text-[8px]">
                               {user.userType}
                             </Badge>
                             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest hidden sm:inline">ID: {user.id.slice(-8).toUpperCase()}</span>
+                            {isDeleted && (
+                              <Badge variant="destructive" className="h-4 px-1.5 py-0 text-[8px] uppercase">
+                                Deleted
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -284,15 +346,21 @@ export default function UserTable() {
                           <Calendar className="w-3 h-3" />
                           {new Date(user.createdAt).toLocaleDateString()}
                         </div>
+                        {isDeleted && user.deletedAt && (
+                          <div className="flex items-center gap-2 text-red-400 text-[10px] uppercase font-bold tracking-widest">
+                            <Archive className="w-3 h-3" />
+                            Deleted: {new Date(user.deletedAt).toLocaleDateString()}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/5">
-                          <Wallet className="w-5 h-5 text-green-500" />
+                        <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center border', isDeleted ? 'bg-red-500/10 border-red-500/5' : 'bg-green-500/10 border-green-500/5')}>
+                          <Wallet className={cn('w-5 h-5', isDeleted ? 'text-red-400' : 'text-green-500')} />
                         </div>
                         <div className="space-y-0.5">
-                          <p className="font-bold text-green-500 text-lg leading-none">₹{user.walletBalance.toLocaleString()}</p>
+                          <p className={cn('font-bold text-lg leading-none', isDeleted ? 'text-red-400' : 'text-green-500')}>₹{user.walletBalance.toLocaleString()}</p>
                           <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Available Credit</p>
                         </div>
                       </div>
@@ -322,28 +390,42 @@ export default function UserTable() {
                         >
                           <Eye className="w-5 h-5" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="w-11 h-11 rounded-2xl bg-white/[0.02] hover:bg-purple-500 hover:text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] border border-white/5 transition-all duration-300"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setIsEditModalOpen(true);
-                          }}
-                        >
-                          <Edit2 className="w-5 h-5" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="w-11 h-11 rounded-2xl bg-white/[0.02] hover:bg-red-600 hover:text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] border border-white/5 transition-all duration-300"
-                          onClick={() => {
-                            setUserToDelete(user);
-                            setIsDeleteModalOpen(true);
-                          }}
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </Button>
+                        {isDeleted ? (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            disabled={restoringId === user.id}
+                            className="w-11 h-11 rounded-2xl bg-white/[0.02] hover:bg-green-600 hover:text-white hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] border border-white/5 transition-all duration-300"
+                            onClick={() => handleRestore(user.id)}
+                          >
+                            <RotateCcw className={cn('w-5 h-5', restoringId === user.id && 'animate-spin')} />
+                          </Button>
+                        ) : (
+                          <>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="w-11 h-11 rounded-2xl bg-white/[0.02] hover:bg-purple-500 hover:text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] border border-white/5 transition-all duration-300"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setIsEditModalOpen(true);
+                              }}
+                            >
+                              <Edit2 className="w-5 h-5" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="w-11 h-11 rounded-2xl bg-white/[0.02] hover:bg-red-600 hover:text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] border border-white/5 transition-all duration-300"
+                              onClick={() => {
+                                setUserToDelete(user);
+                                setIsDeleteModalOpen(true);
+                              }}
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </motion.tr>
@@ -400,9 +482,9 @@ export default function UserTable() {
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
-        title="Destroy Account Integrity"
-        description={`This action will permanently delete user ${userToDelete?.name}. All wallet history, battle logs, and identity records will be purged.`}
-        confirmLabel="Confirm Purge"
+        title="Deactivate Account"
+        description={`This will soft-delete user ${userToDelete?.name}. Their data is preserved and can be restored later from the "Deleted Players" tab.`}
+        confirmLabel="Confirm Deactivation"
         loading={deleting}
       />
       <UserDetailsModal 

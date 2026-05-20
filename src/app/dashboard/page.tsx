@@ -32,7 +32,7 @@ export default function DashboardPage() {
         </div>
         
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <Link href="/dashboard/wallet/deposit" className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-2xl transition-all shadow-lg shadow-green-600/20">
+          <Link href="/dashboard/wallet" className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-2xl transition-all shadow-lg shadow-green-600/20">
             <Plus className="w-5 h-5" /> Add Cash
           </Link>
           <Link href="/dashboard/wallet/withdraw" className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-2xl transition-all border border-white/10">

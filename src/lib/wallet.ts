@@ -24,8 +24,9 @@ export const walletService = {
     withdrawalId?: string;
     metadata?: any;
     adminId?: string;
+    status?: TransactionStatus;
   }) {
-    const { userId, amount, type, description, battleId, withdrawalId, metadata, adminId } = params;
+    const { userId, amount, type, description, battleId, withdrawalId, metadata, adminId, status = TransactionStatus.SUCCESS } = params;
     const decimalAmount = new Prisma.Decimal(amount);
 
     if (decimalAmount.lte(0)) {
@@ -40,7 +41,7 @@ export const walletService = {
           userId,
           amount: decimalAmount,
           type,
-          status: TransactionStatus.SUCCESS,
+          status,
           description,
           battleId,
           withdrawalId,
@@ -49,25 +50,27 @@ export const walletService = {
         },
       });
 
-      // 2. Prepare Update Data
-      const updateData: Prisma.UserUpdateInput = {
-        walletBalance: { increment: decimalAmount },
-      };
+      // 2. Only update balance if status is SUCCESS
+      if (status === TransactionStatus.SUCCESS) {
+        const updateData: Prisma.UserUpdateInput = {
+          walletBalance: { increment: decimalAmount },
+        };
 
-      // Update specific counters based on type
-      if (type === TransactionType.DEPOSIT) {
-        updateData.totalDeposited = { increment: decimalAmount };
-      } else if (type === TransactionType.BATTLE_WIN) {
-        updateData.totalWinnings = { increment: decimalAmount };
-      } else if (type === TransactionType.REFERRAL_COMMISSION) {
-        updateData.totalReferralEarnings = { increment: decimalAmount };
+        // Update specific counters based on type
+        if (type === TransactionType.DEPOSIT) {
+          updateData.totalDeposited = { increment: decimalAmount };
+        } else if (type === TransactionType.BATTLE_WIN) {
+          updateData.totalWinnings = { increment: decimalAmount };
+        } else if (type === TransactionType.REFERRAL_COMMISSION) {
+          updateData.totalReferralEarnings = { increment: decimalAmount };
+        }
+
+        // 3. Update User Balance and Counters
+        await tx.user.update({
+          where: { id: userId },
+          data: updateData,
+        });
       }
-
-      // 3. Update User Balance and Counters
-      await tx.user.update({
-        where: { id: userId },
-        data: updateData,
-      });
 
       return transaction;
     });

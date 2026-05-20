@@ -14,7 +14,12 @@ export async function GET(req: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc';
 
-    const where: Prisma.UserWhereInput = { accountDeleted: false };
+    const includeDeleted = searchParams.get('includeDeleted') === 'true';
+
+    const where: Prisma.UserWhereInput = {};
+    if (!includeDeleted) {
+      where.accountDeleted = false;
+    }
 
     if (search) {
       where.OR = [
