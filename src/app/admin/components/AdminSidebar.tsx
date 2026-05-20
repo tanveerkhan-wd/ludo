@@ -18,7 +18,8 @@ import {
   Wallet,
   ShieldCheck,
   Bell,
-  ChevronRight
+  ChevronRight,
+  ReceiptText
 } from 'lucide-react';
 import { cn } from '@/components/ui';
 
@@ -29,6 +30,7 @@ const menuItems = [
     { name: 'Battles', icon: Swords, href: '/admin/battles' },
   ]},
   { group: 'Financial', items: [
+    { name: 'Transactions', icon: ReceiptText, href: '/admin/transactions' },
     { name: 'Withdrawals', icon: ArrowDownCircle, href: '/admin/withdrawals' },
     { name: 'Wallets', icon: Wallet, href: '/admin/wallets' },
   ]},

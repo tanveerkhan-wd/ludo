@@ -2,7 +2,7 @@
 
 import { IUser } from '@/types/user';
 import { Modal, Badge, Button, Input, Select } from '@/components/ui';
-import { User, Wallet, Share2, Gamepad2, Activity, Shield, PlusCircle, MinusCircle, Loader2 } from 'lucide-react';
+import { User, Wallet, Share2, Activity, PlusCircle, MinusCircle, Loader2, Trophy } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -21,10 +21,15 @@ export default function UserDetailsModal({ user, isOpen, onClose, onUpdate }: Us
 
   if (!user) return null;
 
+  const formatCurrency = (value: number | string) => {
+    const num = typeof value === 'number' ? value : parseFloat(value || '0');
+    return `₹${num.toFixed(2)}`;
+  };
+
   const stats = [
-    { label: 'Wallet Balance', value: `₹${parseFloat(user.walletBalance as any).toFixed(2)}`, icon: Wallet, color: 'text-green-500' },
-    { label: 'Total Winnings', value: `₹${parseFloat(user.totalWinnings as any).toFixed(2)}`, icon: Trophy, color: 'text-yellow-500' },
-    { label: 'Referral Earnings', value: `₹${parseFloat(user.totalReferralEarnings as any).toFixed(2)}`, icon: Share2, color: 'text-purple-500' },
+    { label: 'Wallet Balance', value: formatCurrency(user.walletBalance), icon: Wallet, color: 'text-green-500' },
+    { label: 'Total Winnings', value: formatCurrency(user.totalWinnings), icon: Trophy, color: 'text-yellow-500' },
+    { label: 'Referral Earnings', value: formatCurrency(user.totalReferralEarnings), icon: Share2, color: 'text-purple-500' },
   ];
 
   const handleAdjustBalance = async () => {
@@ -58,7 +63,8 @@ export default function UserDetailsModal({ user, isOpen, onClose, onUpdate }: Us
       } else {
         toast.error(data.error);
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Balance adjustment error:', error);
       toast.error('Something went wrong');
     } finally {
       setAdjusting(false);
@@ -119,11 +125,11 @@ export default function UserDetailsModal({ user, isOpen, onClose, onUpdate }: Us
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Total Deposited</span> 
-                <span className="font-medium text-green-500">₹{parseFloat(user.totalDeposited as any || 0).toFixed(2)}</span>
+                <span className="font-medium text-green-500">{formatCurrency(user.totalDeposited)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Total Withdrawn</span> 
-                <span className="font-medium text-red-500">₹{parseFloat(user.totalWithdrawn as any || 0).toFixed(2)}</span>
+                <span className="font-medium text-red-500">{formatCurrency(user.totalWithdrawn)}</span>
               </div>
             </div>
           </div>
@@ -149,7 +155,7 @@ export default function UserDetailsModal({ user, isOpen, onClose, onUpdate }: Us
                   <label className="text-[10px] font-bold uppercase text-gray-500">Action</label>
                   <Select 
                     value={type} 
-                    onChange={(e) => setType(e.target.value as any)}
+                    onChange={(e) => setType(e.target.value as 'ADMIN_CREDIT' | 'ADMIN_DEBIT')}
                     className="h-10 text-sm"
                   >
                     <option value="ADMIN_CREDIT">Add (Credit)</option>

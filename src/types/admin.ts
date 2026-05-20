@@ -51,3 +51,40 @@ export interface UpdateUserRequest {
   walletBalance?: number;
   referralCode?: string;
 }
+
+export interface AdminTransactionFilters {
+  search?: string;
+  type?: string;
+  status?: string;
+  dateRange?: 'today' | '7d' | '30d' | 'all';
+  page?: number;
+  limit?: number;
+}
+
+export interface ITransaction {
+  id: string;
+  transactionId: string;
+  userId: string;
+  user: {
+    name: string;
+    phone: string;
+  };
+  amount: number;
+  type: string;
+  status: string;
+  description: string;
+  battleId?: string;
+  battle?: {
+    battleId: string;
+  };
+  adminId?: string;
+  admin?: {
+    name: string;
+  };
+  createdAt: string;
+}
+
+export interface AdminTransactionsResponse {
+  transactions: ITransaction[];
+  total: number;
+}
