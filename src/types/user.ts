@@ -12,7 +12,10 @@ export interface IUser {
   password?: string | null;
   referralCode: string;
   referredById?: string | null;
-  kycStatus: string;
+  kyc?: {
+    id: string;
+    kycStatus: string;
+  } | null;
   
   // Financial Fields
   walletBalance: number;

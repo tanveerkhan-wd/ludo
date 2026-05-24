@@ -6,7 +6,7 @@ const updateSchema = z.object({
   name: z.string().optional(),
   userType: z.enum(['Player', 'Admin']).optional(),
   status: z.enum(['Active', 'Inactive', 'Suspended', 'Banned']).optional(),
-  kycStatus: z.enum(['Pending', 'Submitted', 'Verified', 'Rejected']).optional(),
+  kycStatus: z.enum(['PENDING', 'SUBMITTED', 'VERIFIED', 'REJECTED']).optional(),
   walletBalance: z.number().optional(),
   referralCode: z.string().optional(),
 });
@@ -20,6 +20,9 @@ export async function GET(
     
     const user = await prisma.user.findUnique({
       where: { id },
+      include: {
+        kyc: true,
+      }
     });
     
     if (!user) {
@@ -43,17 +46,27 @@ export async function PUT(
     
     const result = updateSchema.safeParse(body);
     if (!result.success) {
-      return NextResponse.json({ error: result.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
-    const user = await prisma.user.update({
-      where: { id },
-      data: result.data,
+    const { kycStatus, ...userData } = result.data;
+
+    const user = await prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id },
+        data: userData,
+      });
+
+      if (kycStatus) {
+        await tx.kYC.upsert({
+          where: { userId: id },
+          update: { kycStatus },
+          create: { userId: id, kycStatus },
+        });
+      }
+
+      return updatedUser;
     });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
 
     return NextResponse.json({ message: 'User updated successfully', user });
   } catch (error: any) {

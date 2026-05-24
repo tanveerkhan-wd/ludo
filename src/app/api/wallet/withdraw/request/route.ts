@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 import { WithdrawalRequestSchema } from '@/types/withdrawal';
 import crypto from 'crypto';
 import { walletService } from '@/lib/wallet';
-import { TransactionType } from '@prisma/client';
+import { TransactionType, NotificationType } from '@prisma/client';
+import { notificationService } from '@/lib/notification';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const validation = WithdrawalRequestSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
     }
 
     const { amount } = validation.data;
@@ -98,6 +99,15 @@ export async function POST(req: NextRequest) {
       });
 
       return withdrawal;
+    });
+
+    // Notify User
+    await notificationService.create({
+      userId,
+      title: "Withdrawal Requested ⏳",
+      message: `Your request for ₹${amount} has been submitted. It will be reviewed by admin within 24 hours.`,
+      type: NotificationType.WITHDRAWAL_SUBMITTED,
+      link: "/wallet"
     });
 
     return NextResponse.json({ success: true, withdrawal: result });

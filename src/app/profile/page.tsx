@@ -17,10 +17,11 @@ export default function ProfilePage() {
   };
 
   const menuItems = [
-    { name: 'KYC Verification', icon: Shield, status: user?.kycStatus || 'Pending', color: 'text-blue-500' },
-    { name: 'Notifications', icon: Bell, color: 'text-yellow-500' },
-    { name: 'Help & Support', icon: HelpCircle, color: 'text-green-500' },
-    { name: 'Terms & Conditions', icon: FileText, color: 'text-gray-400' },
+    { name: 'Update Information', icon: User, path: '/profile/update', color: 'text-purple-500' },
+    { name: 'KYC Verification', icon: Shield, path: '/profile/kyc', status: user?.kyc?.kycStatus || 'PENDING', color: 'text-blue-500' },
+    { name: 'Notifications', icon: Bell, path: '/notifications', color: 'text-yellow-500' },
+    { name: 'Help & Support', icon: HelpCircle, path: '/profile/help', color: 'text-green-500' },
+    { name: 'Terms & Conditions', icon: FileText, path: '/profile/terms', color: 'text-gray-400' },
   ];
 
   return (
@@ -40,6 +41,7 @@ export default function ProfilePage() {
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: index * 0.1 }}
+            onClick={() => item.path && router.push(item.path)}
             className="bg-[#121212] border border-white/5 rounded-2xl p-4 flex items-center justify-between group cursor-pointer hover:border-white/10 transition-all"
           >
             <div className="flex items-center gap-4">
@@ -50,7 +52,7 @@ export default function ProfilePage() {
                 <p className="font-medium text-sm">{item.name}</p>
                 {item.status && (
                   <p className={`text-[10px] font-semibold uppercase ${
-                    item.status === 'Verified' ? 'text-green-500' : 'text-yellow-500'
+                    item.status === 'VERIFIED' ? 'text-green-500' : 'text-yellow-500'
                   }`}>{item.status}</p>
                 )}
               </div>

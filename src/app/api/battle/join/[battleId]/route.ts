@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 import { processReferralCommission, creditReferralCommission } from '@/lib/referral';
 import { walletService } from '@/lib/wallet';
-import { TransactionType } from '@prisma/client';
+import { TransactionType, NotificationType } from '@prisma/client';
+import { notificationService } from '@/lib/notification';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ battleId: string }> }) {
   const token = req.cookies.get('token')?.value;
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bat
       // 1. Find Battle
       const battle = await tx.battle.findUnique({ 
         where: { id: battleId },
-        include: { creator: { select: { id: true, status: true } } }
+        include: { creator: { select: { id: true, status: true, name: true } } }
       });
       
       if (!battle || battle.status !== 'OPEN' || battle.creatorId === userId)
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bat
       // 2. Check Opponent Balance
       const user = await tx.user.findUnique({ 
         where: { id: userId }, 
-        select: { walletBalance: true } 
+        select: { walletBalance: true, name: true } 
       });
       
       if (!user) throw new Error('User not found');
@@ -61,6 +62,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bat
           type: TransactionType.BATTLE_JOIN,
           description: `Battle Entry Fee for ${battle.battleId}`,
         },
+      });
+
+      // Notify Creator
+      await notificationService.create({
+        userId: battle.creatorId,
+        title: "Battle Started! ⚔️",
+        message: `${user.name} joined your battle. Start playing now!`,
+        type: NotificationType.BATTLE_RESULT,
+        link: `/battles`
       });
 
       return updated;

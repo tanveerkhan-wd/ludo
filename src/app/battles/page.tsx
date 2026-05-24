@@ -47,6 +47,61 @@ export default function BattlesPage() {
     return name;
   };
 
+  const fetchBattles = async () => {
+    try {
+      const res = await fetch(`/api/battle?filter=${filter}&search=${search}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setBattles(data);
+    } catch (error: any) {
+      console.error('Fetch error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBattles();
+    const interval = setInterval(fetchBattles, 5000);
+    return () => clearInterval(interval);
+  }, [filter, search]);
+
+  const handlePlay = async (battleId: string) => {
+    if (!user) {
+      toast.error('Please login to join a battle');
+      return;
+    }
+
+    try {
+      setJoiningId(battleId);
+      const res = await fetch(`/api/battle/join/${battleId}`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      setActiveBattle(data);
+      setShowRoomModal(true);
+      fetchBattles();
+      toast.success('Battle joined successfully!');
+    } catch (error: any) {
+      toast.error('Failed to join battle');
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
+  const copyRoomCode = () => {
+    if (activeBattle?.roomCode) {
+      navigator.clipboard.writeText(activeBattle.roomCode);
+      toast.success('Room code copied!');
+    }
+  };
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-12">
       {/* Room Code Modal */}

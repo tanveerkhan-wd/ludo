@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 import { walletService } from '@/lib/wallet';
 import { zapupiService } from '@/lib/zapupi';
 import { TransactionType, TransactionStatus } from '@prisma/client';
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const result = depositSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({

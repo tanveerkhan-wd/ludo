@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { IBattle } from '@/types/battle';
-import { Modal, Badge, Button, Input, Select } from '@/components/ui';
+import { Modal, Badge, Button, Input, Select, cn } from '@/components/ui';
 import { 
   Swords, 
   User, 

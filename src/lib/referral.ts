@@ -1,5 +1,6 @@
 import prisma from './prisma';
-import { Prisma } from '@prisma/client';
+import { Prisma, NotificationType } from '@prisma/client';
+import { notificationService } from './notification';
 
 type Decimal = Prisma.Decimal;
 
@@ -114,4 +115,17 @@ export async function creditReferralCommission(referrerId: string, amount: Decim
       status: 'SUCCESS'
     }
   });
+
+  // 3. Notify Referrer
+  try {
+    await notificationService.create({
+      userId: referrerId,
+      title: "Commission Earned! 💰",
+      message: `You earned ₹${amount} lifetime commission from your referral's battle!`,
+      type: NotificationType.REFERRAL,
+      link: "/dashboard/referral"
+    });
+  } catch (err) {
+    console.error('[Referral] Notification error:', err);
+  }
 }

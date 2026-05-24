@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 import { walletService } from '@/lib/wallet';
 
 export async function GET(req: NextRequest) {

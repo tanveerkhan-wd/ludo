@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (userType) where.userType = userType;
-    if (kycStatus) where.kycStatus = kycStatus;
+    if (kycStatus) where.kyc = { kycStatus: kycStatus as any };
     if (status) where.status = status;
 
     const skip = (page - 1) * limit;
@@ -40,6 +40,11 @@ export async function GET(req: NextRequest) {
         orderBy: { [sortBy]: sortOrder },
         skip,
         take: limit,
+        include: {
+          kyc: {
+            select: { id: true, kycStatus: true }
+          }
+        }
       }),
       prisma.user.count({ where }),
     ]);

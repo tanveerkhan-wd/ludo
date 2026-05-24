@@ -103,6 +103,7 @@ export default function WithdrawalDetailPage() {
 
   const isFinalState = ['REJECTED', 'PROCESSED', 'FAILED'].includes(withdrawal.status);
   const parsedBankDetails = withdrawal.bankDetails ? JSON.parse(withdrawal.bankDetails) : null;
+  const userKycStatus = withdrawal.user.kyc?.kycStatus || 'PENDING';
 
   return (
     <div className="space-y-8 pb-12">
@@ -160,8 +161,8 @@ export default function WithdrawalDetailPage() {
               </div>
               <div>
                 <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-1">KYC Status</p>
-                <Badge variant={withdrawal.user.kycStatus === 'Verified' ? 'success' : 'warning'} className="rounded-lg">
-                  {withdrawal.user.kycStatus}
+                <Badge variant={userKycStatus === 'VERIFIED' ? 'success' : 'warning'} className="rounded-lg">
+                  {userKycStatus}
                 </Badge>
               </div>
             </CardContent>

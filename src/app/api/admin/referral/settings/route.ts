@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 import { getReferralSettings } from '@/lib/referral';
 
 export async function GET(req: NextRequest) {

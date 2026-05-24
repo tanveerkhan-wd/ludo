@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 import prisma from '@/lib/prisma';
 import { walletService } from '@/lib/wallet';
 import { TransactionType } from '@prisma/client';
@@ -27,9 +27,8 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const result = adjustSchema.safeParse(body);
-
     if (!result.success) {
-      return NextResponse.json({ error: result.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { userId, amount, type, reason } = result.data;

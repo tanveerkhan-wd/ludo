@@ -141,12 +141,12 @@ export default function UserTable() {
     }
   };
 
-  const getKYCConfig = (status: KYCStatus) => {
+  const getKYCConfig = (status: any) => {
     switch (status) {
-      case 'Verified': return { variant: 'success' as const, icon: ShieldCheck, label: 'Verified' };
-      case 'Pending': return { variant: 'warning' as const, icon: Clock, label: 'Pending', glow: true };
-      case 'Rejected': return { variant: 'destructive' as const, icon: ShieldAlert, label: 'Rejected' };
-      case 'Submitted': return { variant: 'premium' as const, icon: ShieldCheck, label: 'In Review', glow: true };
+      case 'VERIFIED': return { variant: 'success' as const, icon: ShieldCheck, label: 'Verified' };
+      case 'PENDING': return { variant: 'warning' as const, icon: Clock, label: 'Pending', glow: true };
+      case 'REJECTED': return { variant: 'destructive' as const, icon: ShieldAlert, label: 'Rejected' };
+      case 'SUBMITTED': return { variant: 'premium' as const, icon: ShieldCheck, label: 'In Review', glow: true };
       default: return { variant: 'secondary' as const, icon: Smartphone, label: status };
     }
   };
@@ -294,7 +294,7 @@ export default function UserTable() {
               users.map((user) => {
                 const isDeleted = user.accountDeleted;
                 const status = getStatusConfig(user.status);
-                const kyc = getKYCConfig(user.kycStatus);
+                const kyc = getKYCConfig(user.kyc?.kycStatus || 'PENDING');
                 return (
                   <motion.tr 
                     key={user.id} 

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { CreateBattleSchema } from '@/types/battle';
 import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 import { walletService } from '@/lib/wallet';
 import { TransactionType } from '@prisma/client';
 

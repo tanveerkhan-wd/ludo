@@ -697,6 +697,7 @@ function PlayerDetailCard({ title, user, accent }: { title: string, user: any, a
   const accentColor = accent === 'blue' ? 'text-blue-400' : 'text-red-400';
   const accentBorder = accent === 'blue' ? 'border-blue-500/20' : 'border-red-500/20';
   const accentBg = accent === 'blue' ? 'bg-blue-500/10' : 'bg-red-500/10';
+  const userKycStatus = user.kyc?.kycStatus || 'PENDING';
 
   return (
     <Card className="hover:border-purple-500/30 group bg-[#121212]/40 backdrop-blur-xl">
@@ -745,8 +746,8 @@ function PlayerDetailCard({ title, user, accent }: { title: string, user: any, a
         <div className="space-y-5">
           <div className="flex justify-between items-center px-4">
             <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest">KYC Maturity</span>
-            <Badge variant={user.kycStatus === 'Verified' ? 'success' : 'warning'} className="font-bold px-4 py-1 rounded-xl uppercase h-7 text-[9px] italic">
-              {user.kycStatus === 'Verified' ? 'FULL VALIDATION' : user.kycStatus.toUpperCase()}
+            <Badge variant={userKycStatus === 'VERIFIED' ? 'success' : 'warning'} className="font-bold px-4 py-1 rounded-xl uppercase h-7 text-[9px] italic">
+              {userKycStatus === 'VERIFIED' ? 'FULL VALIDATION' : userKycStatus}
             </Badge>
           </div>
           <Separator />

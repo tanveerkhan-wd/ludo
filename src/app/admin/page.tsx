@@ -2,18 +2,20 @@
 
 import {
   Users, Gamepad2, TrendingUp, IndianRupee, Wallet, Swords, Activity,
-  Zap, ArrowUpRight, ArrowDownRight, UserPlus, BarChart3,
+  Zap, ArrowUpRight, ArrowDownRight, UserPlus, BarChart3, Bell,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Card, CardHeader, CardTitle, CardContent, Badge, Avatar, AvatarFallback, cn } from '@/components/ui';
-import RevenueLineChart from '@/components/admin/charts/RevenueLineChart';
-import BattleBarChart from '@/components/admin/charts/BattleBarChart';
-import GameResultsPieChart from '@/components/admin/charts/GameResultsPieChart';
-import UserGrowthAreaChart from '@/components/admin/charts/UserGrowthAreaChart';
-import TopReferrersChart from '@/components/admin/charts/TopReferrersChart';
+import { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent, Badge, Avatar, AvatarFallback, cn, Button } from '@/components/ui';
+import RevenueLineChart from '@/components/Admin/charts/RevenueLineChart';
+import BattleBarChart from '@/components/Admin/charts/BattleBarChart';
+import GameResultsPieChart from '@/components/Admin/charts/GameResultsPieChart';
+import UserGrowthAreaChart from '@/components/Admin/charts/UserGrowthAreaChart';
+import TopReferrersChart from '@/components/Admin/charts/TopReferrersChart';
+import SendNotificationModal from '@/components/Admin/SendNotificationModal';
 import {
   revenueTrend, battleStats, gameResults, userGrowth, topReferrers,
-} from '@/components/admin/charts/mockData';
+} from '@/components/Admin/charts/mockData';
 
 const stats = [
   {
@@ -64,8 +66,12 @@ const stats = [
 ];
 
 export default function AdminDashboard() {
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+
   return (
     <div className="space-y-12 pb-20">
+      <SendNotificationModal isOpen={showNotifyModal} onClose={() => setShowNotifyModal(false)} />
+
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -75,6 +81,13 @@ export default function AdminDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3 bg-white/5 p-2 rounded-2xl border border-white/5">
+          <Button 
+            onClick={() => setShowNotifyModal(true)}
+            className="h-10 px-6 rounded-xl bg-purple-600/10 text-purple-400 border border-purple-500/20 hover:bg-purple-600 hover:text-white transition-all font-bold uppercase tracking-widest text-[10px] gap-2"
+          >
+            <Bell className="w-4 h-4" /> Broadcast
+          </Button>
+          <div className="w-[1px] h-6 bg-white/10 mx-1" />
           <button className="px-6 py-2.5 rounded-xl bg-purple-600 text-white text-xs font-semibold uppercase tracking-widest shadow-lg shadow-purple-600/20 transition-all active:scale-95">
             Real-time
           </button>

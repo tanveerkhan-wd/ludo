@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Gamepad2, Wallet, User, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import NotificationBell from '@/components/NotificationBell';
 
 const navItems = [
   { name: 'Home', icon: Home, href: '/dashboard' },
@@ -23,9 +24,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <h1 className="text-xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500">
           BAJIGER LUDO
         </h1>
-        <Link href="/dashboard/support" className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
-          <MessageCircle className="w-5 h-5 text-green-500" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <Link href="/dashboard/support" className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
+            <MessageCircle className="w-5 h-5 text-green-500" />
+          </Link>
+        </div>
       </header>
 
       {/* Main Content */}

@@ -90,7 +90,7 @@ export default function UserDetailsModal({ user, isOpen, onClose, onUpdate }: Us
             <div className="flex gap-2 mt-2">
               <Badge>{user.userType}</Badge>
               <Badge variant={user.status === 'Active' ? 'success' : 'destructive'}>{user.status}</Badge>
-              <Badge variant="outline">{user.kycStatus} KYC</Badge>
+              <Badge variant="outline">{user.kyc?.kycStatus || 'PENDING'} KYC</Badge>
             </div>
           </div>
         </div>

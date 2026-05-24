@@ -1,8 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient({
-    datasourceUrl: "file:./dev.db"
-});
+const prisma = new PrismaClient();
 
 async function main() {
   const adminPhone = '9999999999';
@@ -15,7 +13,12 @@ async function main() {
       userType: 'Admin',
       referralCode: 'ADMIN01',
       status: 'Active',
-      kycStatus: 'Verified',
+      kyc: {
+        create: {
+          kycStatus: 'VERIFIED',
+          verifiedAt: new Date(),
+        }
+      }
     },
   });
 

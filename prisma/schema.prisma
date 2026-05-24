@@ -58,6 +58,22 @@ enum WithdrawalMethod {
   BANK
 }
 
+enum NotificationType {
+  WELCOME
+  REFERRAL
+  PROFILE_UPDATE
+  BATTLE_RESULT
+  BATTLE_CANCELLED
+  DISPUTE_RAISED
+  DISPUTE_RESOLVED
+  DEPOSIT_SUCCESS
+  WITHDRAWAL_SUBMITTED
+  WITHDRAWAL_APPROVED
+  WITHDRAWAL_REJECTED
+  ADMIN_ALERT
+  SYSTEM
+}
+
 model User {
   id                    String    @id @default(cuid())
   phone                 String    @unique
@@ -70,7 +86,7 @@ model User {
   referredBy            User?     @relation("Referral", fields: [referredById], references: [id])
   referrals             User[]    @relation("Referral")
   
-  kycStatus             String    @default("Pending") // Pending, Submitted, Verified, Rejected
+  kyc                   KYC?
   
   // Financial Fields
   walletBalance         Decimal   @default(0)
@@ -111,14 +127,35 @@ model User {
   withdrawals           WithdrawalRequest[] @relation("UserWithdrawals")
   processedWithdrawals  WithdrawalRequest[] @relation("ProcessedWithdrawals")
 
+  // Notifications
+  notifications         Notification[]
+
   // Audit
   administeredTransactions WalletTransaction[] @relation("AdminTransactions")
+  kycReviewed           KYC[]     @relation("KYCReviewedBy")
 
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
   @@index([phone])
   @@index([referralCode])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  link      String?
+  metadata  String?          // JSON string for SQLite compatibility
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
 }
 
 model Battle {
@@ -270,4 +307,34 @@ model WithdrawalRequest {
 
   @@index([userId])
   @@index([status])
+}
+
+enum KYCStatus {
+  PENDING
+  SUBMITTED
+  VERIFIED
+  REJECTED
+}
+
+model KYC {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  user                User      @relation(fields: [userId], references: [id])
+  kycStatus           KYCStatus @default(PENDING)
+  aadhaarFrontUrl     String?
+  aadhaarBackUrl      String?
+  panUrl              String?
+  bankAccountNumber   String?
+  bankIfscCode        String?
+  bankHolderName      String?
+  rejectionReason     String?
+  submittedAt         DateTime?
+  verifiedAt          DateTime?
+  reviewedById        String?
+  reviewedBy          User?     @relation("KYCReviewedBy", fields: [reviewedById], references: [id])
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([kycStatus])
 }

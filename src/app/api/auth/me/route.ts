@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,6 +16,14 @@ export async function GET(req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
+      include: {
+        kyc: {
+          select: {
+            id: true,
+            kycStatus: true,
+          }
+        }
+      }
     });
 
     if (!user) {

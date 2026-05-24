@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verifyToken } from '@/lib/jwt'
+import { verifyToken } from '@/lib/auth-jwt'
 
 export async function middleware(request: NextRequest) {
   console.log('MIDDLEWARE START:', request.nextUrl.pathname)

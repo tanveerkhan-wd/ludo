@@ -29,7 +29,7 @@ export default function UserEditModal({ user, isOpen, onClose, onSuccess }: User
         name: user.name || '',
         userType: user.userType || 'Player',
         status: user.status || 'Active',
-        kycStatus: user.kycStatus || 'Pending',
+        kycStatus: user.kyc?.kycStatus || 'PENDING',
         walletBalance: user.walletBalance || 0,
       });
     }
@@ -111,10 +111,10 @@ export default function UserEditModal({ user, isOpen, onClose, onSuccess }: User
               value={formData.kycStatus}
               onChange={(e) => setFormData({ ...formData, kycStatus: e.target.value })}
             >
-              <option value="Pending">Pending</option>
-              <option value="Submitted">Submitted</option>
-              <option value="Verified">Verified</option>
-              <option value="Rejected">Rejected</option>
+              <option value="PENDING">Pending</option>
+              <option value="SUBMITTED">Submitted</option>
+              <option value="VERIFIED">Verified</option>
+              <option value="REJECTED">Rejected</option>
             </Select>
           </div>
 

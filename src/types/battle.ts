@@ -11,12 +11,14 @@ export interface IBattle {
     id: string;
     name: string;
     phone: string;
+    avatar?: string | null;
   };
   opponentId?: string | null;
   opponent?: {
     id: string;
     name: string;
     phone: string;
+    avatar?: string | null;
   } | null;
   entryFee: number;
   prizeAmount: number;
@@ -37,6 +39,7 @@ export interface IBattle {
   proofSubmittedBy?: {
     id: string;
     name: string;
+    avatar?: string | null;
   } | null;
   disputed: boolean;
   disputeReason?: string | null;

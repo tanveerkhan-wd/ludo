@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 import prisma from '@/lib/prisma';
 import Hero from '@/components/Home/Hero';
 import WalletSummary from '@/components/Home/WalletSummary';

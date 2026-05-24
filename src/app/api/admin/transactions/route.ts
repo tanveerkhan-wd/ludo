@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 import prisma from '@/lib/prisma';
 import { walletService } from '@/lib/wallet';
 import { TransactionType, TransactionStatus } from '@prisma/client';

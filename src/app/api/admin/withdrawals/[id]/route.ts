@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -22,7 +22,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             phone: true,
             walletBalance: true,
             totalWinnings: true,
-            kycStatus: true,
+            kyc: {
+              select: { kycStatus: true }
+            },
           }
         },
         processedBy: {

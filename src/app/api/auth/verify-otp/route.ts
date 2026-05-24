@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { signToken } from '@/lib/jwt';
+import { signToken } from '@/lib/auth-jwt';
 import { z } from 'zod';
+import { notificationService } from '@/lib/notification';
+import { NotificationType } from '@prisma/client';
 
 const verifySchema = z.object({
   phone: z.string().regex(/^\d{10}$/, 'Invalid phone number'),
@@ -14,7 +16,7 @@ export async function POST(req: NextRequest) {
     const result = verifySchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { phone, otp } = result.data;
@@ -31,6 +33,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired OTP' }, { status: 400 });
     }
 
+    const isNewUser = user.lastLoginAt === null;
+
     // Clear OTP after successful verification
     await prisma.user.update({
       where: { id: user.id },
@@ -40,6 +44,26 @@ export async function POST(req: NextRequest) {
         lastLoginAt: new Date(),
       },
     });
+
+    if (isNewUser) {
+      await notificationService.create({
+        userId: user.id,
+        title: "Welcome to Bajiger Ludo! 🎮",
+        message: "Get ready to play, compete and earn. Start by adding cash to your wallet!",
+        type: NotificationType.WELCOME,
+        link: "/wallet"
+      });
+
+      if (user.referredById) {
+        await notificationService.create({
+          userId: user.referredById,
+          title: "New Referral Registered! 🤝",
+          message: `Your friend (${user.phone.substring(0, 6)}****) has joined. You'll earn 3% commission on their games!`,
+          type: NotificationType.REFERRAL,
+          link: "/dashboard/referral"
+        });
+      }
+    }
 
     const token = await signToken({ id: user.id, userType: user.userType });
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/jwt';
+import { verifyToken } from '@/lib/auth-jwt';
 import { UpdatePaymentMethodSchema } from '@/types/withdrawal';
 
 export async function GET(req: NextRequest) {
@@ -36,7 +36,7 @@ export async function PATCH(req: NextRequest) {
     const validation = UpdatePaymentMethodSchema.safeParse(body);
     
     if (!validation.success) {
-      return NextResponse.json({ error: validation.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 });
     }
 
     const { preferredWithdrawalMethod, upiId, bankAccountNumber, bankIfscCode, bankAccountHolderName } = validation.data;
