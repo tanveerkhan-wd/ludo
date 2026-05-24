@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { AdminWithdrawalActionSchema } from '@/types/withdrawal';
+import { walletService } from '@/lib/wallet';
+import { TransactionType } from '@prisma/client';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -50,9 +52,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         // Add refund transaction
         await tx.walletTransaction.create({
           data: {
+            transactionId: walletService.generateTransactionId('REF'),
             userId: withdrawal.userId,
             amount: withdrawal.amount,
-            type: 'REFUND',
+            type: TransactionType.REFUND,
             status: 'SUCCESS',
             description: `Refund: Rejected Withdrawal ${withdrawal.withdrawalId}`
           }

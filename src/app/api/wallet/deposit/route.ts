@@ -77,17 +77,19 @@ export async function POST(req: NextRequest) {
         }
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const callbackUrl = `${appUrl}/wallet`;
+        const webhookUrl = settings?.webhookUrl || `${appUrl}/api/webhooks/payment`;
         
-        // Temporarily override zapupiService to use the key from settings
-        // In a real app, you might pass the key to the service method
         const zapResponse = await zapupiService.createOrder({
           order_id: transaction.transactionId,
           amount: amount,
           customer_mobile: user.phone,
           remark: `Deposit for ${user.phone}`,
-          success_url: `${appUrl}/wallet?status=success&txn=${transaction.transactionId}`,
-          failed_url: `${appUrl}/wallet?status=failed&txn=${transaction.transactionId}`,
-          timeout_url: `${appUrl}/wallet?status=timeout&txn=${transaction.transactionId}`,
+          success_url: `${callbackUrl}?status=success&txn=${transaction.transactionId}`,
+          failed_url: `${callbackUrl}?status=failed&txn=${transaction.transactionId}`,
+          timeout_url: `${callbackUrl}?status=timeout&txn=${transaction.transactionId}`,
+          redirect_url: `${callbackUrl}?status=success&txn=${transaction.transactionId}`,
+          webhook_url: webhookUrl,
         }, zapKey);
 
         if (zapResponse.status === 'success') {

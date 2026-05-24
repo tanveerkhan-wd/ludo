@@ -37,10 +37,23 @@ export const zapupiService = {
     success_url?: string;
     failed_url?: string;
     timeout_url?: string;
+    redirect_url?: string;
+    webhook_url?: string;
   }, apiKey?: string) {
     const key = apiKey || ZAPUPI_KEY;
     if (!key) {
       throw new Error('ZapUPI API Key is not configured');
+    }
+
+    const payload = {
+      zap_key: key,
+      ...params,
+      amount: params.amount.toString(),
+    };
+
+    // Ensure redirect_url is set if not provided (fallback to success_url)
+    if (!payload.redirect_url && params.success_url) {
+      payload.redirect_url = params.success_url;
     }
 
     const response = await fetch(`${ZAPUPI_API_URL}/create-order`, {
@@ -48,11 +61,7 @@ export const zapupiService = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        zap_key: key,
-        ...params,
-        amount: params.amount.toString(),
-      }),
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json() as ZapUPICreateOrderResponse;

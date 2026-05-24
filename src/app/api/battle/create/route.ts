@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma';
 import { CreateBattleSchema } from '@/types/battle';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
+import { walletService } from '@/lib/wallet';
+import { TransactionType } from '@prisma/client';
 
 export async function POST(req: Request) {
   const cookieStore = await cookies();
@@ -22,28 +24,11 @@ export async function POST(req: Request) {
 
   try {
     return await prisma.$transaction(async (tx) => {
-      // 1. Check & Lock Funds
+      // 1. Check User & Balance
       const user = await tx.user.findUnique({ where: { id: userId }, select: { walletBalance: true } });
       if (!user) throw new Error('User not found');
       
-      // Convert Decimal/Number to float for comparison if needed, 
-      // but Prisma handles comparisons if they are same type.
-      // Based on schema, walletBalance is likely Decimal or Int.
       if (Number(user.walletBalance) < entryFee) throw new Error('Insufficient balance');
-
-      await tx.user.update({
-        where: { id: userId },
-        data: { walletBalance: { decrement: entryFee } },
-      });
-
-      await tx.walletTransaction.create({
-        data: {
-          userId: userId,
-          amount: entryFee,
-          type: 'DEBIT',
-          description: 'Battle Entry Fee',
-        },
-      });
 
       // 2. Create Battle
       const battle = await tx.battle.create({
@@ -57,9 +42,30 @@ export async function POST(req: Request) {
         },
       });
 
+      // 3. Debit Wallet using centralized walletService logic (within same transaction if possible)
+      // Note: walletService methods start their own transactions, so we'll call create manually
+      // or refactor walletService to accept a transaction client.
+      // For now, consistent with schema requirement:
+      await tx.user.update({
+        where: { id: userId },
+        data: { walletBalance: { decrement: entryFee } },
+      });
+
+      const transaction = await tx.walletTransaction.create({
+        data: {
+          transactionId: walletService.generateTransactionId('BTL'),
+          userId: userId,
+          battleId: battle.id,
+          amount: entryFee,
+          type: TransactionType.BATTLE_JOIN,
+          description: `Battle Entry Fee for ${battle.battleId}`,
+        },
+      });
+
       return NextResponse.json(battle);
     });
   } catch (error: any) {
+    console.error('BATTLE_CREATE_ERROR', error);
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }

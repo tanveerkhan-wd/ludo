@@ -88,18 +88,41 @@ export default function WalletPage() {
     const status = params.get('status');
     const txn = params.get('txn');
 
-    if (status) {
-      if (status === 'success') {
-        toast.success('Payment initiated successfully! It will reflect in your wallet shortly.', {
-          duration: 5000
+    const verifyPayment = async (txnId: string) => {
+      const toastId = toast.loading('Verifying payment with gateway...');
+      try {
+        const res = await fetch('/api/wallet/deposit/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transactionId: txnId })
         });
+        const data = await res.json();
+        
+        if (res.ok && data.status === 'SUCCESS') {
+          toast.success(`₹${data.amount} credited to your wallet!`, { id: toastId });
+          fetchWalletData();
+        } else if (data.status === 'PENDING') {
+          toast.info('Payment is still pending. It will reflect once confirmed.', { id: toastId });
+        } else if (data.status === 'FAILED') {
+          toast.error('Payment failed.', { id: toastId });
+        } else {
+          toast.dismiss(toastId);
+        }
+      } catch (err) {
+        toast.error('Failed to verify payment. Please refresh.', { id: toastId });
+      }
+    };
+
+    if (txn) {
+      verifyPayment(txn);
+      // Clear URL parameters but keep the txn for verification logic if needed
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (status) {
+      if (status === 'success') {
+        toast.success('Payment initiated successfully!');
       } else if (status === 'failed') {
         toast.error('Payment failed or was cancelled.');
-      } else if (status === 'timeout') {
-        toast.error('Payment session timed out.');
       }
-      
-      // Clear URL parameters
       window.history.replaceState({}, '', window.location.pathname);
       fetchWalletData();
     }

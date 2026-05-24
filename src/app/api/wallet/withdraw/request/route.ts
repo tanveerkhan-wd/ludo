@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { WithdrawalRequestSchema } from '@/types/withdrawal';
 import crypto from 'crypto';
+import { walletService } from '@/lib/wallet';
+import { TransactionType } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   try {
@@ -86,9 +88,10 @@ export async function POST(req: NextRequest) {
       // 4. Create Wallet Transaction for deduction
       await tx.walletTransaction.create({
         data: {
+          transactionId: walletService.generateTransactionId('WD'),
           userId,
           amount,
-          type: 'DEBIT',
+          type: TransactionType.WITHDRAWAL,
           status: 'PENDING', // Will be SUCCESS when processed, or REFUNDED when rejected
           description: `Withdrawal Request: ${withdrawalId}`,
         }

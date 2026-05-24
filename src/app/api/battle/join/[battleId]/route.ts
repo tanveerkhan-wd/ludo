@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { processReferralCommission, creditReferralCommission } from '@/lib/referral';
+import { walletService } from '@/lib/wallet';
+import { TransactionType } from '@prisma/client';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ battleId: string }> }) {
   const token = req.cookies.get('token')?.value;
@@ -15,41 +17,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bat
   const userId = decoded.id;
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // 1. Find Battle
       const battle = await tx.battle.findUnique({ 
         where: { id: battleId },
-        include: { creator: true }
+        include: { creator: { select: { id: true, status: true } } }
       });
       
       if (!battle || battle.status !== 'OPEN' || battle.creatorId === userId)
         throw new Error('Battle unavailable');
 
-      // 2. Lock Entry Fee for Opponent
+      // 2. Check Opponent Balance
       const user = await tx.user.findUnique({ 
         where: { id: userId }, 
         select: { walletBalance: true } 
       });
       
-      if (!user || user.walletBalance.lt(battle.entryFee)) 
+      if (!user) throw new Error('User not found');
+      if (Number(user.walletBalance) < Number(battle.entryFee)) 
         throw new Error('Insufficient balance');
 
-      await tx.user.update({
-        where: { id: userId },
-        data: { walletBalance: { decrement: battle.entryFee } },
-      });
-
-      await tx.walletTransaction.create({
-        data: {
-          userId: userId,
-          battleId: battle.id,
-          amount: battle.entryFee,
-          type: 'DEBIT',
-          description: 'Battle Entry Fee',
-        },
-      });
-
-      // 3. Update Battle to IN_PROGRESS
+      // 3. Update Battle to IN_PROGRESS (Immediate Lock)
       const updated = await tx.battle.update({
         where: { id: battleId },
         data: {
@@ -58,21 +46,52 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ bat
         },
       });
 
-      // 4. Handle Referral Commissions (Lifetime 3%)
+      // 4. Deduct Entry Fee
+      await tx.user.update({
+        where: { id: userId },
+        data: { walletBalance: { decrement: battle.entryFee } },
+      });
+
+      await tx.walletTransaction.create({
+        data: {
+          transactionId: walletService.generateTransactionId('BTL'),
+          userId: userId,
+          battleId: battle.id,
+          amount: battle.entryFee,
+          type: TransactionType.BATTLE_JOIN,
+          description: `Battle Entry Fee for ${battle.battleId}`,
+        },
+      });
+
+      return updated;
+    }, {
+      timeout: 10000 // Increase timeout to 10 seconds for concurrent safety
+    });
+
+    // 5. Handle Referral Commissions (Non-blocking / Background)
+    // We do this AFTER the main transaction to keep it fast
+    try {
       // Process for Creator
-      const creatorReferral = await processReferralCommission(battle.id, battle.creatorId, tx);
+      const creatorReferral = await processReferralCommission(result.id, result.creatorId);
       if (creatorReferral) {
-        await creditReferralCommission(creatorReferral.referrerId, creatorReferral.amount, battle.id, tx);
+        await prisma.$transaction(async (tx) => {
+          await creditReferralCommission(creatorReferral.referrerId, creatorReferral.amount, result.id, tx);
+        });
       }
 
       // Process for Opponent
-      const opponentReferral = await processReferralCommission(battle.id, userId, tx);
+      const opponentReferral = await processReferralCommission(result.id, userId);
       if (opponentReferral) {
-        await creditReferralCommission(opponentReferral.referrerId, opponentReferral.amount, battle.id, tx);
+        await prisma.$transaction(async (tx) => {
+          await creditReferralCommission(opponentReferral.referrerId, opponentReferral.amount, result.id, tx);
+        });
       }
+    } catch (refErr) {
+      console.error('REFERRAL_PROCESSING_DELAYED_ERROR', refErr);
+      // Don't fail the join if referral fails
+    }
 
-      return NextResponse.json(updated);
-    });
+    return NextResponse.json(result);
   } catch (error: any) {
     console.error('JOIN_BATTLE_REFERRAL_ERROR', error);
     return NextResponse.json({ error: error.message }, { status: 400 });

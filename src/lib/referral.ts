@@ -105,10 +105,11 @@ export async function creditReferralCommission(referrerId: string, amount: Decim
   // 2. Create Wallet Transaction
   await tx.walletTransaction.create({
     data: {
+      transactionId: `TXN-REF-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
       userId: referrerId,
       battleId: battleId,
       amount: amount,
-      type: 'CREDIT',
+      type: 'REFERRAL_COMMISSION',
       description: `Referral Commission (Lifetime 3%)`,
       status: 'SUCCESS'
     }

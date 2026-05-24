@@ -47,20 +47,29 @@ export default async function BattleDetailPage({ params }: BattlePageProps) {
       }))
     };
 
+    const formatUser = (user: any) => {
+      if (!user) return null;
+      return {
+        ...user,
+        walletBalance: Number(user.walletBalance),
+        totalDeposited: Number(user.totalDeposited),
+        totalWithdrawn: Number(user.totalWithdrawn),
+        totalWinnings: Number(user.totalWinnings),
+        totalReferralEarnings: Number(user.totalReferralEarnings),
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
+        deletedAt: user.deletedAt?.toISOString() || null,
+        lastLoginAt: user.lastLoginAt?.toISOString() || null,
+        otpExpiry: user.otpExpiry?.toISOString() || null,
+      };
+    };
+
     if (formattedBattle.creator) {
-      formattedBattle.creator.walletBalance = Number(formattedBattle.creator.walletBalance);
-      formattedBattle.creator.totalWinnings = Number(formattedBattle.creator.totalWinnings);
-      formattedBattle.creator.totalReferralEarnings = Number(formattedBattle.creator.totalReferralEarnings);
-      formattedBattle.creator.createdAt = formattedBattle.creator.createdAt.toISOString();
-      formattedBattle.creator.updatedAt = formattedBattle.creator.updatedAt.toISOString();
+      formattedBattle.creator = formatUser(formattedBattle.creator);
     }
 
     if (formattedBattle.opponent) {
-      formattedBattle.opponent.walletBalance = Number(formattedBattle.opponent.walletBalance);
-      formattedBattle.opponent.totalWinnings = Number(formattedBattle.opponent.totalWinnings);
-      formattedBattle.opponent.totalReferralEarnings = Number(formattedBattle.opponent.totalReferralEarnings);
-      formattedBattle.opponent.createdAt = formattedBattle.opponent.createdAt.toISOString();
-      formattedBattle.opponent.updatedAt = formattedBattle.opponent.updatedAt.toISOString();
+      formattedBattle.opponent = formatUser(formattedBattle.opponent);
     }
 
     return (

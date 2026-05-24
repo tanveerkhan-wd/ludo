@@ -686,7 +686,7 @@ function PlayerDetailCard({ title, user, accent }: { title: string, user: any, a
         <CardHeader className="p-8"><CardTitle className="text-sm uppercase tracking-widest text-gray-600">{title}</CardTitle></CardHeader>
         <CardContent className="py-24 text-center">
           <div className="w-16 h-16 rounded-full border-4 border-dashed border-white/5 mx-auto mb-6 flex items-center justify-center">
-            <UserIcon className="w-8 h-8 text-gray-800" />
+            <User className="w-8 h-8 text-gray-800" />
           </div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gray-700 italic">Participant data not synchronized.</p>
         </CardContent>

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/jwt';
 import { ResolveDisputeSchema } from '@/types/battle';
+import { walletService } from '@/lib/wallet';
+import { TransactionType } from '@prisma/client';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -44,10 +46,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         await tx.walletTransaction.create({
           data: {
+            transactionId: walletService.generateTransactionId('REF'),
             userId: battle.creatorId,
             battleId: battle.id,
             amount: battle.entryFee,
-            type: 'REFUND',
+            type: TransactionType.REFUND,
             description: `Battle #${battle.battleId} Cancelled (Admin Resolved)`,
           },
         });
@@ -60,10 +63,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
           await tx.walletTransaction.create({
             data: {
+              transactionId: walletService.generateTransactionId('REF'),
               userId: battle.opponentId,
               battleId: battle.id,
               amount: battle.entryFee,
-              type: 'REFUND',
+              type: TransactionType.REFUND,
               description: `Battle #${battle.battleId} Cancelled (Admin Resolved)`,
             },
           });
@@ -88,10 +92,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         await tx.walletTransaction.create({
           data: {
+            transactionId: walletService.generateTransactionId('WIN'),
             userId: winnerId,
             battleId: battle.id,
             amount: battle.prizeAmount,
-            type: 'CREDIT',
+            type: TransactionType.BATTLE_WIN,
             description: `Battle #${battle.battleId} Win Payout (Admin Resolved)`,
           },
         });
